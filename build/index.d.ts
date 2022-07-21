@@ -1,1 +1,1 @@
-export * from './components/datePicker/datePicker';
+export { DatePicker } from './components/datePicker/datePicker';

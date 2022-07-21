@@ -6,7 +6,7 @@ declare type DatePickerOption = {
     vertical: 'auto' | 'top' | 'bottom';
     horizontal: 'auto' | 'left' | 'right';
 };
-declare class DatePicker extends HTMLElement {
+export declare class DatePicker extends HTMLElement {
     private section;
     private onClick;
     private input;
@@ -19,4 +19,4 @@ declare class DatePicker extends HTMLElement {
     hide(): void;
     updatePosition(): void;
 }
-export { DatePicker };
+export {};

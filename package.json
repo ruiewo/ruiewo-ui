@@ -4,6 +4,9 @@
   "description": "browser ui library.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "files": [
+    "build"
+  ],
   "scripts": {
     "build": "webpack",
     "watch": "webpack --watch",
@@ -25,6 +28,7 @@
   "homepage": "https://github.com/ruiewo/ruiewo-ui#readme",
   "devDependencies": {
     "css-loader": "^6.7.1",
+    "esbuild": "^0.14.49",
     "eslint": "^7.16.0",
     "eslint-config-prettier": "^6.14.0",
     "eslint-plugin-import": "^2.22.1",

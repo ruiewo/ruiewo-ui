@@ -1,22 +1,17 @@
 const path = require('path');
 
 module.exports = {
-    mode: 'production',
-    // mode: 'development', // production, development
+    mode: 'development', // production, development
     entry: {
-        // datePicker: `./src/components/datePicker/datePicker.ts`,
+        datePicker: `./src/components/datePicker/datePicker.ts`,
         index: `./src/index.ts`,
     },
     output: {
         path: path.join(__dirname, 'build'),
         filename: '[name].js',
         publicPath: '/',
-        // assetModuleFilename: pathData => {
-        //     const filepath = path.dirname(pathData.filename).split('/').slice(1).join('/');
-        //     return `${filepath}/[name][ext]`;
-        // },
-        // assetModuleFilename: 'images/[name][ext]',
     },
+    devtool: false,
     module: {
         rules: [
             {
