@@ -1,16 +1,11 @@
 :host {
-    // --theme-color: #eee;
     --theme-color: #db4d6f;
-    --foreground-color: #ccc;
+    --foreground: #ccc;
     --background: #3c3c3c;
+    --foreground-outOfMonth: #808080;
+    --background-outOfMonth: #222;
     --holiday-color: rgb(77, 157, 207);
     --border-color: #222;
-
-    // --theme-color: var(--theme-color);
-    // --foreground-color: var(--foreground-color);
-    // --background: var(--active-background-color);
-    // --holiday-color: rgb(77, 157, 207);
-    // --border-color: var(--background-color);
 }
 * {
     padding: 0;
@@ -45,7 +40,7 @@ section {
     font-size: 1.5rem;
     font-weight: bold;
     text-align: center;
-    color: var(--foreground-color);
+    color: var(--foreground);
 }
 
 .year {
@@ -74,7 +69,7 @@ section {
 
 .weekdays,
 .days {
-    color: var(--foreground-color);
+    color: var(--foreground);
     display: grid;
     grid-template-columns: repeat(7, 3rem);
     text-align: right;
@@ -106,13 +101,13 @@ section {
         line-height: 3rem;
         text-align: center;
 
-        color: var(--foreground-color);
+        color: var(--foreground);
         border: solid 1px var(--border-color);
         user-select: none;
 
         &.outOfMonth {
-            color: gray;
-            background-color: #111;
+            color: var(--foreground-outOfMonth);
+            background-color: var(--background-outOfMonth);
         }
 
         &.selected,
