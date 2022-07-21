@@ -9,7 +9,7 @@ const options = {
     bundle: false,
     target: 'esnext',
     platform: 'browser',
-    outdir: './build',
+    outdir: './dist',
     // tsconfig: 'tsconfig.json',
     loader: {
         '.html': 'text',

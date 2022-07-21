@@ -7,7 +7,7 @@ module.exports = {
         index: `./src/index.ts`,
     },
     output: {
-        path: path.join(__dirname, 'build'),
+        path: path.join(__dirname, 'dist'),
         filename: '[name].js',
         publicPath: '/',
     },
