@@ -1,3 +1,6 @@
+*.css
+.vscode/
+
 # Logs
 logs
 *.log
