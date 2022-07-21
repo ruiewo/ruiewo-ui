@@ -4,7 +4,8 @@ module.exports = {
     mode: 'production',
     // mode: 'development', // production, development
     entry: {
-        datePicker: `./src/components/datePicker/datePicker.ts`,
+        // datePicker: `./src/components/datePicker/datePicker.ts`,
+        index: `./src/index.ts`,
     },
     output: {
         path: path.join(__dirname, 'build'),
