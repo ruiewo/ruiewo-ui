@@ -1,5 +1,5 @@
 :host {
-    --theme-color: #db4d6f;
+    --theme: #db4d6f;
     --foreground: #ccc;
     --background: #3c3c3c;
     --foreground-outOfMonth: #808080;
@@ -7,7 +7,7 @@
     --border-color: #222;
 }
 :host(.dark) {
-    --theme-color: #ccc;
+    --theme: #ccc;
     --foreground: #ccc;
     --background: #3c3c3c;
     --foreground-outOfMonth: #808080;
@@ -15,7 +15,7 @@
     --border-color: #222;
 }
 :host(.white) {
-    --theme-color: #333;
+    --theme: #333;
     --foreground: #333;
     --background: #f2f2f2;
     --foreground-outOfMonth: #222;
@@ -78,7 +78,7 @@
     }
 
     &:hover {
-        color: var(--theme-color);
+        color: var(--theme);
     }
 }
 
@@ -92,9 +92,9 @@
 
 .weekdays {
     div {
-        color: var(--theme-color);
-        border-top: solid 1px var(--theme-color);
-        border-bottom: solid 1px var(--theme-color);
+        color: var(--theme);
+        border-top: solid 1px var(--theme);
+        border-bottom: solid 1px var(--theme);
         height: 2.4rem;
         line-height: 2.4rem;
         text-align: center;
@@ -123,7 +123,7 @@
         &.selected,
         &:hover {
             font-weight: bold;
-            outline: 3px solid var(--theme-color);
+            outline: 3px solid var(--theme);
             outline-offset: -3px;
             cursor: pointer;
         }
