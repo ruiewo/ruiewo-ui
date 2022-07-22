@@ -1,10 +1,10 @@
 import { isDate, triggerEvent } from '../../utility/utility';
 
 const css = `
-:host{--theme-color: #db4d6f;--foreground: #ccc;--background: #3c3c3c;--foreground-outOfMonth: #808080;--background-outOfMonth: #222;--border-color: #222}.dark:host{--theme-color: #ccc;--foreground: #ccc;--background: #3c3c3c;--foreground-outOfMonth: #808080;--background-outOfMonth: #222;--border-color: #222}.white:host{--theme-color: #333;--foreground: #333;--background: #f2f2f2;--foreground-outOfMonth: #222;--background-outOfMonth: #ccc;--border-color: transparent}*{padding:0;margin:0;box-sizing:border-box}section{position:absolute;left:0;top:0;display:block;background-color:var(--background)}section.hidden{display:none}.header{height:3rem;display:flex;flex-direction:row;justify-content:space-between}.year,.month,.next,.prev{display:inline-block;width:3rem;line-height:3rem;font-size:1.5rem;font-weight:bold;text-align:center;color:var(--foreground)}.year{width:7rem;outline:none;border:none;background-color:var(--background)}.month{width:5rem}.next,.prev{width:3rem;cursor:pointer}.next:active:not([disabled]),.prev:active:not([disabled]){transform:scale(0.95)}.next:hover,.prev:hover{color:var(--theme-color)}.weekdays,.days{color:var(--foreground);display:grid;grid-template-columns:repeat(7, 3rem);text-align:right}.weekdays div{color:var(--theme-color);border-top:solid 1px var(--theme-color);border-bottom:solid 1px var(--theme-color);height:2.4rem;line-height:2.4rem;text-align:center;-webkit-user-select:none;-moz-user-select:none;user-select:none}.days{height:auto}.days .day{position:relative;height:3rem;line-height:3rem;text-align:center;color:var(--foreground);border:solid 1px var(--border-color);-webkit-user-select:none;-moz-user-select:none;user-select:none}.days .day.outOfMonth{color:var(--foreground-outOfMonth);background-color:var(--background-outOfMonth)}.days .day.selected,.days .day:hover{font-weight:bold;outline:3px solid var(--theme-color);outline-offset:-3px;cursor:pointer}
+:host{--theme-color: #db4d6f;--foreground: #ccc;--background: #3c3c3c;--foreground-outOfMonth: #808080;--background-outOfMonth: #222;--border-color: #222}:host(.dark){--theme-color: #ccc;--foreground: #ccc;--background: #3c3c3c;--foreground-outOfMonth: #808080;--background-outOfMonth: #222;--border-color: #222}:host(.white){--theme-color: #333;--foreground: #333;--background: #f2f2f2;--foreground-outOfMonth: #222;--background-outOfMonth: #ccc;--border-color: transparent}:host{position:absolute;left:0;top:0;display:none;background-color:var(--background)}:host(.show){display:block}*{padding:0;margin:0;box-sizing:border-box}.header{height:3rem;display:flex;flex-direction:row;justify-content:space-between}.year,.month,.next,.prev{display:inline-block;width:3rem;line-height:3rem;font-size:1.5rem;font-weight:bold;text-align:center;color:var(--foreground)}.year{width:7rem;outline:none;border:none;background-color:var(--background)}.month{width:5rem}.next,.prev{width:3rem;cursor:pointer}.next:active:not([disabled]),.prev:active:not([disabled]){transform:scale(0.95)}.next:hover,.prev:hover{color:var(--theme-color)}.weekdays,.days{color:var(--foreground);display:grid;grid-template-columns:repeat(7, 3rem);text-align:right}.weekdays div{color:var(--theme-color);border-top:solid 1px var(--theme-color);border-bottom:solid 1px var(--theme-color);height:2.4rem;line-height:2.4rem;text-align:center;-webkit-user-select:none;-moz-user-select:none;user-select:none}.days{height:auto}.days .day{position:relative;height:3rem;line-height:3rem;text-align:center;color:var(--foreground);border:solid 1px var(--border-color);-webkit-user-select:none;-moz-user-select:none;user-select:none}.days .day.outOfMonth{color:var(--foreground-outOfMonth);background-color:var(--background-outOfMonth)}.days .day.selected,.days .day:hover{font-weight:bold;outline:3px solid var(--theme-color);outline-offset:-3px;cursor:pointer}
 `;
 const html = `
-<section class="hidden" part="wrapper">
+<section>
     <div class="header"><span class="prev"><</span><span class="month"></span><input type="number" class="year"><span class="next">></span></div>
     <div class="weekdays"></div>
     <div class="days"></div>
@@ -12,33 +12,6 @@ const html = `
 </section>
 `;
 const template = `<style>${css}</style>${html}`;
-
-// const color = {
-//     white: {
-//         theme: '#333',
-//         foreground: '#333',
-//         background: '#f2f2f2',
-//         foregroundOutOfMonth: '#222',
-//         backgroundOutOfMonth: '#ccc',
-//         border: 'transparent',
-//     },
-//     dark: {
-//         theme: '#ccc',
-//         foreground: '#ccc',
-//         background: '#3c3c3c',
-//         foregroundOutOfMonth: '#808080',
-//         backgroundOutOfMonth: '#222',
-//         border: '#222',
-//     },
-//     pink: {
-//         theme: '#db4d6f',
-//         foreground: '#ccc',
-//         background: '#3c3c3c',
-//         foregroundOutOfMonth: '#808080',
-//         backgroundOutOfMonth: '#222',
-//         border: '#222',
-//     },
-// };
 
 type DatePickerOption = {
     format: string;
@@ -158,8 +131,6 @@ export class DatePicker extends HTMLElement {
 
         this.updatePosition();
 
-        this.section.classList.remove('hidden');
-
         this.onClick = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
 
@@ -178,13 +149,13 @@ export class DatePicker extends HTMLElement {
     }
 
     hide() {
-        this.section.classList.add('hidden');
+        (this.shadowRoot!.host as HTMLElement).classList.remove('show');
         document.removeEventListener('click', this.onClick);
     }
 
     updatePosition() {
-        // remove hidden class for getBoundingClientRect
-        this.section.classList.remove('hidden');
+        // set show class for getBoundingClientRect
+        (this.shadowRoot!.host as HTMLElement).classList.add('show');
 
         const inputRect = this.input!.getBoundingClientRect();
         const calendarRect = this.section.getBoundingClientRect();
@@ -209,10 +180,8 @@ export class DatePicker extends HTMLElement {
             left = inputRect.left + window.pageXOffset;
         }
 
-        this.section.classList.add('hidden');
-
-        this.section.style.top = top + 'px';
-        this.section.style.left = left + 'px';
+        (this.shadowRoot!.host as HTMLElement).style.top = top + 'px';
+        (this.shadowRoot!.host as HTMLElement).style.left = left + 'px';
     }
 }
 

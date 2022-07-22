@@ -22,6 +22,16 @@
     --background-outOfMonth: #ccc;
     --border-color: transparent;
 }
+:host {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: none;
+    background-color: var(--background);
+}
+:host(.show) {
+    display: block;
+}
 
 * {
     padding: 0;
@@ -29,17 +39,6 @@
     box-sizing: border-box;
 }
 
-section {
-    position: absolute;
-    left: 0;
-    top: 0;
-    display: block;
-    background-color: var(--background);
-
-    &.hidden {
-        display: none;
-    }
-}
 .header {
     height: 3rem;
     display: flex;
