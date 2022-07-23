@@ -33,60 +33,6 @@
     // display: none;
 }
 
-.wrapper {
-    display: inline-block;
-    // position: relative;
-    position: absolute;
-    width: 200px;
-    height: var(--twSelectHeight);
-    font-size: var(--twSelectFontSize);
-    background-color: transparent;
-    cursor: pointer;
-
-    &::before {
-        position: absolute;
-        content: '▼';
-        color: var(--arrow-color);
-        right: 1rem;
-        line-height: var(--twSelectHeight);
-    }
-
-    &.active::before {
-        transform: rotateX(180deg);
-    }
-
-    * {
-        font-size: var(--twSelectFontSize);
-        line-height: var(--twSelectHeight);
-    }
-}
-
-input {
-    display: inline-block;
-    color: var(--color);
-    padding: 0.1rem 0.5rem;
-    text-align: left;
-    user-select: none;
-    background-color: var(--twSelectBackground);
-    border: none;
-    border-bottom: var(--twSelectBottomBorder);
-    width: 100%;
-    height: 100%;
-    line-height: var(--twSelectHeight);
-    outline: none;
-
-    &:focus {
-        background-color: var(--twSelectFocusBackground);
-        border-bottom-color: var(--twSelectFocusBottomBorderColor);
-    }
-    &:read-only {
-        cursor: pointer;
-    }
-    &::placeholder {
-        color: var(--twSelectPlaceholder);
-    }
-}
-
 ul {
     // position: absolute;
     // width: 12rem; // 200px
@@ -106,11 +52,15 @@ ul {
     width: 100%;
     max-height: calc(var(--twSelectHeight) * 8);
     // overflow: auto;
-    overflow: visible;
-    // overflow-y: auto;
+    // overflow: visible;
+    overflow-y: auto;
     // overflow-x: visible;
     z-index: 1;
     box-shadow: 0 3px 7px -2px rgba(0, 0, 0, 0.4);
+}
+
+:host(.show) ul {
+    display: block;
 }
 
 li {
@@ -120,7 +70,7 @@ li {
     padding: 0;
     white-space: nowrap;
 
-    &:hover > div {
+    &:hover {
         color: var(--color-hover);
         background: var(--background-hover);
     }
@@ -128,9 +78,7 @@ li {
     &.disabled {
         opacity: 0.5;
         pointer-events: none;
-        div {
-            cursor: default;
-        }
+        cursor: default;
     }
 
     &.hidden {
@@ -138,7 +86,7 @@ li {
     }
 }
 
-.menuItem {
+li {
     display: block;
     width: 100%;
     padding: 0.4rem 0.7rem;
@@ -158,6 +106,11 @@ li {
         border-left-color: var(--twSelectLeftBorder);
     }
 }
+li.dropDown {
+    padding: 0 0.5rem;
+    font-size: inherit;
+    line-height: inherit;
+}
 
 span {
     margin-left: 2.2rem;
@@ -176,7 +129,7 @@ i {
     background-size: contain;
 }
 
-.separator {
+hr {
     display: block;
     margin: 7px 5px;
     height: 1px;

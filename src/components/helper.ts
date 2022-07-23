@@ -1,8 +1,8 @@
 export type MenuItemType = 'line' | 'divisor';
 export type MenuItem = {
-    type: MenuItemType;
+    type?: MenuItemType;
     text: string;
-    icon: string;
+    icon?: string;
     value: string;
     onClick?: (e: MouseEvent) => void;
 };
