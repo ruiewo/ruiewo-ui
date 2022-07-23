@@ -1,0 +1,73 @@
+:host {
+    // --color: #444;
+    // --color-hover: #fff;
+    // --background: linear-gradient(to bottom, #fff 0%, #e5e5e5 100px, #e5e5e5 100%);
+    // --arrow-color: #808080;
+
+    --color: var(--foreground-color);
+    --color-hover: #eee;
+    --placeholder: dimgray;
+    --arrow-color: var(--foreground-color);
+
+    --background: transparent;
+    --background-focus: var(--active-background-color);
+
+    --height: 3rem;
+    --fontSize: 1.5rem;
+    --bottomBorder: 2px solid var(--foreground-color);
+    --bottomBorder-focus: var(--theme-color);
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-size: var(--fontSize);
+    line-height: var(--height);
+}
+
+div {
+    display: inline-block;
+    position: relative;
+    width: 12rem;
+    height: var(--height);
+    background-color: transparent;
+    cursor: pointer;
+
+    &::before {
+        position: absolute;
+        content: '▼';
+        color: var(--arrow-color);
+        right: 1rem;
+        line-height: var(--height);
+    }
+
+    &.active::before {
+        transform: rotateX(180deg);
+    }
+}
+
+input {
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+    padding: 0.1rem 0.5rem;
+    color: var(--color);
+    text-align: left;
+    background-color: var(--background);
+    border: none;
+    border-bottom: var(--bottomBorder);
+    outline: none;
+    user-select: none;
+
+    &:focus {
+        background-color: var(--background-focus);
+        border-bottom-color: var(--bottomBorder-focus);
+    }
+    &:read-only {
+        cursor: pointer;
+    }
+    &::placeholder {
+        color: var(--placeholder);
+    }
+}
