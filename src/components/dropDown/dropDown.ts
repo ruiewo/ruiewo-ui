@@ -99,6 +99,8 @@ export class DropDown extends HTMLElement {
         this.menu.show(this.items);
         currentMenu = this.self;
 
+        this.wrapper.classList.add('active');
+
         this.updatePosition();
     }
 
@@ -109,6 +111,7 @@ export class DropDown extends HTMLElement {
 
     close() {
         this.menu.close();
+        this.wrapper.classList.remove('active');
         currentMenu = null;
     }
 }
