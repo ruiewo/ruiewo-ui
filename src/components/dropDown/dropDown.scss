@@ -16,6 +16,8 @@
     --fontSize: 1.5rem;
     --bottomBorder: 0.3rem solid var(--foreground-color);
     --bottomBorder-focus: var(--theme-color);
+
+    width: 12rem;
 }
 
 * {
@@ -28,8 +30,7 @@
 div {
     display: inline-block;
     position: relative;
-    // width: 12rem;
-    width: 100%;
+    width: inherit;
     height: var(--height);
     background-color: transparent;
     cursor: pointer;

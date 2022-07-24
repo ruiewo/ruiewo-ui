@@ -74,6 +74,8 @@ export class DropDown extends HTMLElement {
             // functionによる代入ではinputの変更をoninput/onchangeで補足できないため、能動的に発火する。
             triggerEvent('change', this.input);
 
+            this.option.onSelect(item.value);
+
             this.close();
         };
 
