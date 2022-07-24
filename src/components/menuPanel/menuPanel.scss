@@ -99,34 +99,43 @@ li {
     overflow: hidden;
     cursor: pointer;
     user-select: none;
-
+}
+li.dropDown {
+    padding: 0 0.5em;
+    font-size: inherit;
+    line-height: inherit;
     border-left: 0.3rem solid transparent;
 
     &.selected {
         border-left-color: var(--twSelectLeftBorder);
     }
-}
-li.dropDown {
-    padding: 0 0.5rem;
-    font-size: inherit;
-    line-height: inherit;
+
+    span {
+        margin-left: 0;
+    }
+
+    i {
+        display: none;
+    }
 }
 
-span {
-    margin-left: 2.2rem;
-}
+li.contextMenu {
+    span {
+        margin-left: 2.2rem;
+    }
 
-i {
-    position: absolute;
-    left: 0.5rem;
-    width: 2rem;
-    height: 2rem;
-    top: 50%;
-    transform: translateY(-50%);
+    i {
+        position: absolute;
+        left: 0.5rem;
+        width: 2rem;
+        height: 2rem;
+        top: 50%;
+        transform: translateY(-50%);
 
-    background-position: right;
-    background-repeat: no-repeat;
-    background-size: contain;
+        background-position: right;
+        background-repeat: no-repeat;
+        background-size: contain;
+    }
 }
 
 hr {

@@ -6,7 +6,7 @@ const css = `
 :host{--color: var(--foreground-color);--color-hover: #eee;--placeholder: dimgray;--arrow-color: var(--foreground-color);--background: transparent;--background-focus: var(--active-background-color);--height: 3rem;--fontSize: 1.5rem;--bottomBorder: 2px solid var(--foreground-color);--bottomBorder-focus: var(--theme-color)}*{padding:0;margin:0;box-sizing:border-box;font-size:var(--fontSize);line-height:var(--height)}div{display:inline-block;position:relative;width:12rem;height:var(--height);background-color:rgba(0,0,0,0);cursor:pointer}div::before{position:absolute;content:"▼";color:var(--arrow-color);right:1rem;line-height:var(--height)}div.active::before{transform:rotateX(180deg)}input{display:inline-block;width:100%;height:100%;padding:.1rem .5rem;color:var(--color);text-align:left;background-color:var(--background);border:none;border-bottom:var(--bottomBorder);outline:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}input:focus{background-color:var(--background-focus);border-bottom-color:var(--bottomBorder-focus)}input:-moz-read-only{cursor:pointer}input:read-only{cursor:pointer}input::-moz-placeholder{color:var(--placeholder)}input::placeholder{color:var(--placeholder)}
 `;
 const html = `
-<div><input type="text" placeholder="SELECT"></div>
+<div><input type="text" placeholder="SELECT" spellcheck="false"></div>
 `;
 
 const template = `<style>${css}</style>${html}`;
@@ -15,8 +15,8 @@ let currentMenu: DropDown | null = null;
 
 type DropDownOption = {
     items: MenuItem[];
-    placeholder: string;
-    useInput: boolean;
+    placeholder?: string;
+    useInput?: boolean;
     onClick?: (e: MouseEvent) => void;
 };
 const defaultOption = {
@@ -50,7 +50,7 @@ export class DropDown extends HTMLElement {
 
         const option = Object.assign({}, defaultOption, userOption);
         this.items = option.items;
-        this.input.readOnly = option.useInput;
+        this.input.readOnly = option.useInput != true;
 
         if (!userOption?.placeholder) {
             option.placeholder = option.useInput ? '選択/入力して下さい' : '選択して下さい';
@@ -59,7 +59,6 @@ export class DropDown extends HTMLElement {
 
         this.menu = new MenuPanel();
         this.wrapper.appendChild(this.menu);
-        // this.root.appendChild(this.menu);
 
         this.menu.onClick = item => {
             this.input.value = item.text;
@@ -76,7 +75,7 @@ export class DropDown extends HTMLElement {
             if (target.nodeName === 'INPUT') {
                 target.focus();
                 this.show(this.items);
-                // ruiewoSelect.filterSelectPanelItem(target as HTMLInputElement);
+                this.menu.filter(this.input.value);
                 return;
             }
 
@@ -85,7 +84,25 @@ export class DropDown extends HTMLElement {
 
         this.input.oninput = () => {
             this.input.dataset.value = '';
-            // ruiewoSelect.filterSelectPanelItem(this.input);
+            this.menu.filter(this.input.value);
+        };
+
+        this.input.onkeydown = e => {
+            const keyCode = e.code;
+
+            switch (keyCode) {
+                case 'Enter':
+                    this.menu.select();
+                    break;
+                case 'ArrowDown':
+                    this.menu.selectNext();
+                    break;
+                case 'ArrowUp':
+                    this.menu.selectPrev();
+                    break;
+                default:
+                    break;
+            }
         };
     }
 
