@@ -29,7 +29,7 @@ export class MenuPanel extends HTMLElement {
         this.ul = this.root.querySelector('ul')!;
 
         this.ul.onclick = e => {
-            const indexStr = (e.target as HTMLElement).dataset.index;
+            const indexStr = (e.target as HTMLElement).closest('li')!.dataset.index;
             if (!indexStr) {
                 return;
             }
