@@ -166,7 +166,7 @@ ul ul {
     left: 99%;
 }
 
-.active > ul {
+:host(.show) > ul {
     display: block;
     animation: fadeInUp 400ms;
 }
