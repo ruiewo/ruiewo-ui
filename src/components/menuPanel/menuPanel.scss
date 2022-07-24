@@ -89,6 +89,7 @@ li {
 li {
     display: block;
     width: 100%;
+    height: var(--twSelectHeight);
     padding: 0.4rem 0.7rem;
     color: var(--color);
     border: 1px solid transparent;
@@ -99,6 +100,11 @@ li {
     overflow: hidden;
     cursor: pointer;
     user-select: none;
+
+    span {
+        height: var(--twSelectHeight);
+        line-height: var(--twSelectHeight);
+    }
 }
 li.dropDown {
     padding: 0 0.5em;

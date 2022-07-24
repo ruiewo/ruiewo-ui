@@ -1,4 +1,4 @@
-import { triggerEvent } from '../../index';
+import { isNullOrWhiteSpace, triggerEvent } from '../../utility/utility';
 import { calcPosition, MenuItem, PositionOption } from '../helper';
 import { MenuPanel } from '../menuPanel/menuPanel';
 
@@ -13,14 +13,21 @@ const template = `<style>${css}</style>${html}`;
 
 let currentMenu: DropDown | null = null;
 
-type DropDownOption = {
-    items: MenuItem[];
-    placeholder?: string;
-    useInput?: boolean;
+export type DropDownOption = {
+    valueKey: string;
+    textKey: string;
+    placeholder: string;
+    useBlank: boolean;
+    useInput: boolean;
+    onSelect: (value: string) => void;
 };
 const defaultOption = {
+    valueKey: 'value',
+    textKey: 'text',
     placeholder: '選択/入力して下さい',
+    useBlank: false,
     useInput: false,
+    onSelect: () => {},
 };
 
 export class DropDown extends HTMLElement {
@@ -31,13 +38,14 @@ export class DropDown extends HTMLElement {
     private input: HTMLInputElement;
     private menu: MenuPanel;
     private items: MenuItem[] = [];
+    private option: DropDownOption;
 
-    private option: PositionOption = {
+    private position: PositionOption = {
         vertical: 'auto',
         horizontal: 'auto',
     };
 
-    constructor(userOption?: DropDownOption) {
+    constructor(items: any[], userOption?: Partial<DropDownOption>) {
         super();
         this.self = this;
         this.root = this.attachShadow({ mode: 'open' });
@@ -47,14 +55,14 @@ export class DropDown extends HTMLElement {
         this.wrapper = this.root.querySelector('div')!;
         this.input = this.root.querySelector('input')!;
 
-        const option = Object.assign({}, defaultOption, userOption);
-        this.items = option.items;
-        this.input.readOnly = option.useInput != true;
+        this.option = Object.assign({}, defaultOption, userOption);
+        this.items = this.convert(items);
+        this.input.readOnly = this.option.useInput != true;
 
         if (!userOption?.placeholder) {
-            option.placeholder = option.useInput ? '選択/入力して下さい' : '選択して下さい';
+            this.option.placeholder = this.option.useInput ? '選択/入力して下さい' : '選択して下さい';
         }
-        this.input.placeholder = option.placeholder;
+        this.input.placeholder = this.option.placeholder!;
 
         this.menu = new MenuPanel();
         this.wrapper.appendChild(this.menu);
@@ -73,8 +81,10 @@ export class DropDown extends HTMLElement {
             const target = e.target as HTMLElement;
             if (target.nodeName === 'INPUT') {
                 target.focus();
-                this.show(this.items);
-                this.menu.filter(this.input.value);
+                this.show();
+                if (this.option.useInput) {
+                    this.menu.filter(this.input.value);
+                }
                 return;
             }
 
@@ -83,7 +93,9 @@ export class DropDown extends HTMLElement {
 
         this.input.oninput = () => {
             this.input.dataset.value = '';
-            this.menu.filter(this.input.value);
+            if (this.option.useInput) {
+                this.menu.filter(this.input.value);
+            }
         };
 
         this.input.onkeydown = e => {
@@ -105,12 +117,8 @@ export class DropDown extends HTMLElement {
         };
     }
 
-    show(items?: MenuItem[]) {
+    show() {
         closeMenuPanel();
-
-        if (items != null) {
-            this.items = items;
-        }
 
         this.menu.show(this.items);
         currentMenu = this.self;
@@ -121,7 +129,7 @@ export class DropDown extends HTMLElement {
     }
 
     updatePosition() {
-        const { left, top } = calcPosition(this.input, this.menu, this.option);
+        const { left, top } = calcPosition(this.input, this.menu, this.position);
         this.menu.updatePosition({ left, top });
     }
 
@@ -129,6 +137,54 @@ export class DropDown extends HTMLElement {
         this.menu.close();
         this.wrapper.classList.remove('active');
         currentMenu = null;
+    }
+
+    convert(items: any[]): MenuItem[] {
+        const menuItems = items.map(x => {
+            if (x.type === 'divisor') {
+                return { text: '', value: '', type: 'divisor' };
+            }
+
+            const text = isNullOrWhiteSpace(this.option.textKey) ? (x as string) : (x[this.option.textKey!] as string);
+            const value = isNullOrWhiteSpace(this.option.valueKey) ? (x as string) : (x[this.option.valueKey!] as string);
+
+            return { text, value };
+        });
+
+        if (this.option.useBlank) {
+            menuItems.unshift({ text: '', value: '' });
+        }
+
+        return menuItems as MenuItem[];
+    }
+
+    getValue() {
+        return this.input.dataset.value!;
+    }
+
+    setValue(value: string | number | null | undefined) {
+        const valueStr = value ? value.toString() : '';
+        const item = this.items.find(x => x.value === valueStr);
+
+        if (item != null) {
+            this.input.value = item.text;
+            this.input.dataset.value = item.value;
+        } else if (this.option.useBlank) {
+            this.input.value = '';
+            this.input.dataset.value = '';
+        } else {
+            const item = this.items[0];
+            if (item) {
+                this.input.value = item.text;
+                this.input.dataset.value = item.value;
+            } else {
+                this.input.value = '';
+                this.input.dataset.value = '';
+            }
+        }
+
+        // functionによる代入ではinputの変更をoninput/onchangeで補足できないため、能動的に発火する。
+        triggerEvent('change', this.input);
     }
 }
 
@@ -148,215 +204,5 @@ function initialize() {
         closeMenuPanel();
     });
 }
+
 initialize();
-
-// class ruiewoSelect extends HTMLElement {
-//     private static initialized = false;
-//     private static activeWrapper: HTMLElement | null = null;
-
-//     private wrapper: HTMLElement;
-//     private input: HTMLInputElement;
-
-//     constructor(items: twSelectItem[], option: twSelectOption | null = null) {
-//         super();
-//         ruiewoSelect.initialize();
-
-//         const defaultOption: twSelectOption = {
-//             placeholder: '選択/入力して下さい',
-//             useInput: false,
-//         };
-//         option = Object.assign(defaultOption, option) as twSelectOption;
-
-//         this.attachShadow({ mode: 'open' });
-//         this.shadowRoot!.innerHTML = template + ruiewoSelect.render(items, option);
-
-//         this.wrapper = this.shadowRoot!.querySelector('div')!;
-//         this.input = this.shadowRoot!.querySelector('input')!;
-
-//         this.wrapper.onmouseup = e => {
-//             const target = e.target as HTMLElement;
-//             if (target.nodeName === 'INPUT') {
-//                 target.focus();
-//                 ruiewoSelect.showSelectPanel(this.wrapper);
-//                 ruiewoSelect.filterSelectPanelItem(target as HTMLInputElement);
-//                 return;
-//             }
-
-//             const selectedItem = target.closest('.menuItem') as HTMLElement | null;
-//             if (selectedItem) {
-//                 this.wrapper.querySelectorAll('.selected').forEach(x => x.classList.remove('selected'));
-//                 selectedItem.classList.add('selected');
-
-//                 this.input.value = selectedItem.textContent!;
-//                 this.input.dataset.value = selectedItem.dataset.value;
-
-//                 // functionによる代入ではinputの変更をoninput/onchangeで補足できないため、能動的に発火する。
-//                 const changeEvent = document.createEvent('HTMLEvents');
-//                 changeEvent.initEvent('change', false, true);
-//                 this.input.dispatchEvent(changeEvent);
-//             }
-
-//             ruiewoSelect.closeSelectPanel();
-//         };
-
-//         this.input.onkeydown = e => {
-//             const keyCode = e.code;
-
-//             switch (keyCode) {
-//                 case 'Enter': {
-//                     const item = this.wrapper.querySelector<HTMLElement>('.menuItem.selected');
-//                     if (item) {
-//                         this.input.value = item.textContent!;
-//                         this.input.dataset.value = item.dataset.value;
-//                         ruiewoSelect.closeSelectPanel();
-//                     }
-//                     break;
-//                 }
-//                 case 'ArrowDown':
-//                 case 'ArrowUp': {
-//                     const itemNodeList = this.wrapper.querySelectorAll('.menuItem:not(.hidden)');
-//                     if (itemNodeList.length === 0) {
-//                         return;
-//                     }
-
-//                     const items = [...itemNodeList];
-//                     const currentIndex = items.findIndex(x => x.classList.contains('selected'));
-
-//                     let newIndex = currentIndex;
-//                     switch (keyCode) {
-//                         case 'ArrowUp':
-//                             newIndex--;
-//                             newIndex = newIndex < 0 ? items.length - 1 : newIndex;
-//                             break;
-//                         case 'ArrowDown':
-//                             newIndex++;
-//                             newIndex = newIndex >= items.length ? 0 : newIndex;
-//                             break;
-//                     }
-
-//                     items[currentIndex]?.classList.remove('selected');
-//                     items[newIndex].classList.add('selected');
-//                     break;
-//                 }
-//                 default:
-//                     break;
-//             }
-//         };
-
-//         this.input.oninput = () => {
-//             this.input.dataset.value = '';
-//             ruiewoSelect.filterSelectPanelItem(this.input);
-//         };
-//     }
-
-//     static render(items: twSelectItem[], option: twSelectOption) {
-//         const wrapper =
-//             `<div class="wrapper">` +
-//             `<input type="text" placeholder="${option.placeholder}" ${option.useInput ? 'readonly' : ''}>` +
-//             this.renderItems(items) +
-//             `</div>`;
-
-//         return wrapper;
-//     }
-
-//     // changeItems(items: twSelectItem[]) {
-//     //     const itemsHtml = TwSelect.renderItems(items, true);
-//     //     this.menu.innerHTML = itemsHtml;
-//     // }
-
-//     static renderItems(items: twSelectItem[], onlyItems = false): string {
-//         const menuItems = items.map(item => {
-//             if (item.separator === true) {
-//                 return `<li class="separator"></li>`;
-//             }
-//             if (item.children && item.children.length > 0) {
-//                 const subMenu = this.renderItems(item.children);
-//                 return this.createMenuItem(item, subMenu);
-//             }
-//             return this.createMenuItem(item);
-//         });
-
-//         if (onlyItems) {
-//             return menuItems.join('');
-//         }
-
-//         return '<ul>' + menuItems.join('') + '</ul>';
-//     }
-
-//     static initialize() {
-//         if (!ruiewoSelect.initialized) {
-//             document.addEventListener('mouseup', function (e) {
-//                 if ((e.target as HTMLElement).closest('tw-select')) {
-//                     return;
-//                 }
-
-//                 ruiewoSelect.closeSelectPanel();
-//             });
-
-//             ruiewoSelect.initialized = true;
-//         }
-//     }
-
-//     static closeSelectPanel() {
-//         if (!ruiewoSelect.activeWrapper) return;
-
-//         ruiewoSelect.activeWrapper.classList.remove('active');
-//         ruiewoSelect.activeWrapper = null;
-//     }
-
-//     static showSelectPanel(wrapper: HTMLElement) {
-//         if (!wrapper) return;
-
-//         if (ruiewoSelect.activeWrapper == wrapper) return;
-
-//         ruiewoSelect.closeSelectPanel();
-//         wrapper.classList.add('active');
-//         ruiewoSelect.activeWrapper = wrapper;
-//     }
-
-//     static filterSelectPanelItem(input: HTMLInputElement) {
-//         if (input.readOnly) {
-//             return;
-//         }
-
-//         const items = input.parentNode!.querySelectorAll('.menuItem');
-//         for (const item of items) {
-//             const str = new RegExp(input.value, 'gi');
-//             const li = item.closest('li')!;
-//             if (item.innerHTML.match(str)) {
-//                 // item.classList.remove('hidden');
-//                 li.classList.remove('hidden');
-//             } else {
-//                 // item.classList.add('hidden');
-//                 li.classList.add('hidden');
-//                 item.classList.remove('selected');
-//             }
-//         }
-//     }
-
-//     static createMenuItem(item: twSelectItem, subMenu: string | null = null) {
-//         const classNames = item.classList?.join(' ') ?? '';
-
-//         return `<li class="${subMenu == null ? '' : 'subMenu'}"><div class="menuItem ${classNames}" data-value="${item.value}"><i part="${
-//             item.icon ?? ''
-//         }"></i><span>${item.text}</span></div>${subMenu == null ? '' : subMenu}</li>`;
-//     }
-// }
-
-// customElements.define('tw-select', ruiewoSelect);
-
-// export { ruiewoSelect as TwSelect };
-
-// export type twSelectItem = { text: string; value: string; icon?: string; classList?: string[]; children: twSelectItem[]; separator?: boolean };
-
-// export type twSelectOption = {
-//     // event: string;
-//     // predicate?: (e: MouseEvent) => boolean;
-//     // onShow?: (e: MouseEvent) => void;
-//     // onClick?: (e: MouseEvent) => void;
-//     // onClose?: (e: MouseEvent) => void;
-//     // setPosition?: (e: MouseEvent) => HTMLElement;
-//     // inheritWidth?: boolean;
-//     placeholder: string;
-//     useInput: boolean;
-// };
