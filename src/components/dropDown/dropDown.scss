@@ -61,6 +61,7 @@ input {
     border-bottom: var(--bottomBorder);
     outline: none;
     user-select: none;
+    font-family: inherit;
 
     &:focus {
         background-color: var(--background-focus);
