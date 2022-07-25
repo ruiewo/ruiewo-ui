@@ -1,5 +1,5 @@
 import { isNullOrWhiteSpace, triggerEvent } from '../../utility/utility';
-import { calcPosition, MenuItem, PositionOption } from '../helper';
+import { MenuItem, PositionOption } from '../helper';
 import { MenuPanel } from '../menuPanel/menuPanel';
 
 const css = `
@@ -131,8 +131,8 @@ export class DropDown extends HTMLElement {
     }
 
     updatePosition() {
-        const { left, top } = calcPosition(this.input, this.menu, this.position);
-        this.menu.updatePosition({ left, top });
+        const { top, right, bottom, left } = calcPosition(this.input, this.menu, this.position);
+        this.menu.updatePosition({ top, right, bottom, left });
     }
 
     close() {
@@ -188,6 +188,35 @@ export class DropDown extends HTMLElement {
         // functionによる代入ではinputの変更をoninput/onchangeで補足できないため、能動的に発火する。
         triggerEvent('change', this.input);
     }
+}
+
+function calcPosition(input: Element, menu: Element, option: PositionOption) {
+    const inputRect = input.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
+
+    const { vertical, horizontal } = option;
+
+    let top: number | undefined = undefined;
+    let left: number | undefined = undefined;
+    let bottom: number | undefined = undefined;
+    let right: number | undefined = undefined;
+
+    if (
+        vertical === 'top' ||
+        (vertical === 'auto' && inputRect.bottom + menuRect.height > window.innerHeight && window.pageYOffset > menuRect.height)
+    ) {
+        bottom = -inputRect.height;
+    } else {
+        top = inputRect.height;
+    }
+
+    if (horizontal === 'right' || (horizontal === 'auto' && inputRect.left + menuRect.width > window.innerWidth)) {
+        right = 0;
+    } else {
+        left = 0;
+    }
+
+    return { top, right, bottom, left };
 }
 
 function closeMenuPanel() {

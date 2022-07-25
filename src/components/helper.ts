@@ -5,6 +5,7 @@ export type MenuItem = {
     value: string;
     icon?: string;
     onClick?: (e: MouseEvent) => void;
+    children?: MenuItem[];
 };
 
 type Vertical = 'auto' | 'top' | 'bottom';
@@ -15,8 +16,8 @@ export type PositionOption = {
 };
 
 export const calcPosition = (target: Element, menu: Element, option: PositionOption) => {
-    const inputRect = target.getBoundingClientRect();
-    const calendarRect = menu.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
 
     const { vertical, horizontal } = option;
 
@@ -25,17 +26,43 @@ export const calcPosition = (target: Element, menu: Element, option: PositionOpt
 
     if (
         vertical === 'top' ||
-        (vertical === 'auto' && inputRect.bottom + calendarRect.height > window.innerHeight && window.pageYOffset > calendarRect.height)
+        (vertical === 'auto' && targetRect.bottom + menuRect.height > window.innerHeight && window.pageYOffset > menuRect.height)
     ) {
-        top = inputRect.top + window.pageYOffset - calendarRect.height;
+        top = targetRect.top + window.pageYOffset - menuRect.height;
     } else {
-        top = inputRect.bottom + window.pageYOffset;
+        top = targetRect.bottom + window.pageYOffset;
     }
 
-    if (horizontal === 'right' || (horizontal === 'auto' && inputRect.left + calendarRect.width > window.innerWidth)) {
-        left = inputRect.right + window.pageXOffset - calendarRect.width;
+    if (horizontal === 'right' || (horizontal === 'auto' && targetRect.left + menuRect.width > window.innerWidth)) {
+        left = targetRect.right + window.pageXOffset - menuRect.width;
     } else {
-        left = inputRect.left + window.pageXOffset;
+        left = targetRect.left + window.pageXOffset;
+    }
+
+    return { top, left };
+};
+
+export const calcPositionFromPoint = (e: MouseEvent, menu: Element, option: PositionOption) => {
+    const x = e.pageX;
+    const y = e.pageY;
+
+    const menuRect = menu.getBoundingClientRect();
+
+    const { vertical, horizontal } = option;
+
+    let top = 0;
+    let left = 0;
+
+    if (vertical === 'top' || (vertical === 'auto' && y + menuRect.height > window.innerHeight && window.pageYOffset > menuRect.height)) {
+        top = y + window.pageYOffset - menuRect.height;
+    } else {
+        top = y + window.pageYOffset;
+    }
+
+    if (horizontal === 'right' || (horizontal === 'auto' && x + menuRect.width > window.innerWidth)) {
+        left = x + window.pageXOffset - menuRect.width;
+    } else {
+        left = x + window.pageXOffset;
     }
 
     return { top, left };
