@@ -46,18 +46,17 @@ export class MenuPanel extends HTMLElement {
         this.ul.onmouseover = e => {
             const li = (e.target as HTMLElement).closest<HTMLElement>('li.subMenu');
             if (li == null) {
+                this.subMenu?.close();
                 return;
             }
+
             this.subMenu?.close();
             this.subMenu = new SubMenuPanel(this.self);
 
             this.root.appendChild(this.subMenu);
-            // document.body.appendChild(this.subMenu);
 
             this.subMenu.onClick = item => {
-                console.log('submenu clicked.');
-
-                this.subMenu?.close();
+                this.subMenu = null;
                 this.close();
             };
 
@@ -235,6 +234,7 @@ export class SubMenuPanel extends MenuPanel {
 
     close() {
         this.self.remove();
+        // this.onClose();
     }
 }
 
@@ -277,13 +277,6 @@ const calcPositionFromParent = (
 function initialize() {
     customElements.define('rui-menupanel', MenuPanel);
     customElements.define('rui-submenupanel', SubMenuPanel);
-    // document.addEventListener('mouseup', function (e) {
-    //     if ((e.target as HTMLElement).closest('menu-panel')) {
-    //         return;
-    //     }
-
-    //     closeMenuPanel();
-    // });
 }
 
 initialize();

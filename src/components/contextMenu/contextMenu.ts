@@ -8,7 +8,7 @@ const html = `
 
 const template = `<style>${css}</style>${html}`;
 
-let currentMenu: ContextMenu | null = null;
+let currentContextMenu: ContextMenu | null = null;
 
 export type ContextMenuOption = {
     width: string;
@@ -49,7 +49,7 @@ export class ContextMenu extends HTMLElement {
         this.root.appendChild(this.menu);
 
         this.menu.onClose = () => {
-            this.close();
+            currentContextMenu = null;
         };
 
         element.addEventListener('contextmenu', e => {
@@ -80,7 +80,7 @@ export class ContextMenu extends HTMLElement {
         closeMenuPanel();
 
         this.menu.show(this.items, 'ContextMenu');
-        currentMenu = this.self;
+        currentContextMenu = this.self;
 
         console.log('show rui-context');
 
@@ -93,13 +93,13 @@ export class ContextMenu extends HTMLElement {
     }
 
     close() {
-        currentMenu = null;
+        this.menu.close();
     }
 }
 
 function closeMenuPanel() {
-    if (currentMenu != null) {
-        currentMenu.close();
+    if (currentContextMenu != null) {
+        currentContextMenu.close();
     }
 }
 
