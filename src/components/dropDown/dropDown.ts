@@ -226,9 +226,9 @@ function closeMenuPanel() {
 }
 
 function initialize() {
-    customElements.define('drop-down', DropDown);
+    customElements.define('rui-dropdown', DropDown);
     document.addEventListener('mouseup', function (e) {
-        if ((e.target as HTMLElement).closest('drop-down')) {
+        if ((e.target as HTMLElement).closest('rui-dropdown')) {
             return;
         }
 

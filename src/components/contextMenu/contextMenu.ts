@@ -102,9 +102,9 @@ function closeMenuPanel() {
 }
 
 function initialize() {
-    customElements.define('ruiewo-contextmenu', ContextMenu);
+    customElements.define('rui-contextmenu', ContextMenu);
     document.addEventListener('mouseup', function (e) {
-        if ((e.target as HTMLElement).closest('ruiewo-contextmenu')) {
+        if ((e.target as HTMLElement).closest('rui-contextmenu')) {
             return;
         }
 
