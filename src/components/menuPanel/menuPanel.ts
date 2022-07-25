@@ -255,14 +255,14 @@ const calcPositionFromParent = (
 
     if (
         vertical === 'top' ||
-        (vertical === 'auto' && targetRect.bottom + menuRect.height > window.innerHeight && window.pageYOffset > menuRect.height)
+        (vertical === 'auto' && targetRect.top + menuRect.height > window.innerHeight && targetRect.bottom + window.pageYOffset > menuRect.height)
     ) {
         top = targetRect.bottom + window.pageYOffset - menuRect.height;
     } else {
         top = targetRect.top + window.pageYOffset;
     }
 
-    if (horizontal === 'left' || (horizontal === 'auto' && targetRect.left + menuRect.width > window.innerWidth)) {
+    if (horizontal === 'left' || (horizontal === 'auto' && targetRect.right + menuRect.width > window.innerWidth)) {
         left = targetRect.left + window.pageXOffset - menuRect.width;
     } else {
         left = targetRect.right + window.pageXOffset;

@@ -80,7 +80,7 @@ export const calcPositionFromPoint = (e: MouseEvent, menu: Element, option: Posi
     let top = 0;
     let left = 0;
 
-    if (vertical === 'top' || (vertical === 'auto' && y + menuRect.height > window.innerHeight && window.pageYOffset > menuRect.height)) {
+    if (vertical === 'top' || (vertical === 'auto' && y + menuRect.height > window.innerHeight && y + window.pageYOffset > menuRect.height)) {
         top = y + window.pageYOffset - menuRect.height;
     } else {
         top = y + window.pageYOffset;
