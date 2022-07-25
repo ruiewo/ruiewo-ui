@@ -15,7 +15,7 @@ export type PositionOption = {
     horizontal: Horizontal;
 };
 
-export const calcPosition = (target: Element, menu: Element, option: PositionOption) => {
+export const calcPosition = (target: Element, menu: Element, option: PositionOption = { vertical: 'auto', horizontal: 'auto' }) => {
     const targetRect = target.getBoundingClientRect();
     const menuRect = menu.getBoundingClientRect();
 
@@ -37,6 +37,33 @@ export const calcPosition = (target: Element, menu: Element, option: PositionOpt
         left = targetRect.right + window.pageXOffset - menuRect.width;
     } else {
         left = targetRect.left + window.pageXOffset;
+    }
+
+    return { top, left };
+};
+
+export const calcPositionH = (target: Element, menu: Element, option: PositionOption = { vertical: 'auto', horizontal: 'auto' }) => {
+    const targetRect = target.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
+
+    const { vertical, horizontal } = option;
+
+    let top = 0;
+    let left = 0;
+
+    if (
+        vertical === 'top' ||
+        (vertical === 'auto' && targetRect.bottom + menuRect.height > window.innerHeight && window.pageYOffset > menuRect.height)
+    ) {
+        top = targetRect.bottom + window.pageYOffset - menuRect.height;
+    } else {
+        top = targetRect.top + window.pageYOffset;
+    }
+
+    if (horizontal === 'left' || (horizontal === 'auto' && targetRect.left + menuRect.width > window.innerWidth)) {
+        left = targetRect.left + window.pageXOffset - menuRect.width;
+    } else {
+        left = targetRect.right + window.pageXOffset;
     }
 
     return { top, left };

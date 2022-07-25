@@ -1,4 +1,4 @@
-import { MenuItem } from '../helper';
+import { calcPosition, calcPositionH, MenuItem, PositionOption } from '../helper';
 
 const css = `
 :host{--color: var(--foreground-color);--color-hover: #eee;--background: var(--active-background-color);--background-hover: var(--lightDark-theme-color);--arrow-color: var(--foreground-color);--arrow-color-hover: #eee;--shadow-color: #fff5;--height: 3rem;--fontSize: 1.5rem;--leftBorder: dimgray;position:absolute;display:block;width:inherit}*{padding:0;margin:0;box-sizing:border-box}ul{display:none;list-style-type:none;text-align:left;background-color:var(--twSelectListBackground);width:inherit;max-height:calc(var(--height)*8);overflow-y:auto;z-index:1;box-shadow:0 3px 7px -2px rgba(0,0,0,.4)}:host(.show) ul{display:block}li{display:block;position:relative;margin:0;padding:0;white-space:nowrap}li:hover{color:var(--color-hover);background:var(--background-hover)}li.disabled{opacity:.5;pointer-events:none;cursor:default}li.hidden{display:none}li{display:block;width:100%;height:var(--height);padding:.4rem .7rem;color:var(--color);border:1px solid rgba(0,0,0,0);font-size:var(--fontSize);text-align:left;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;cursor:pointer;-webkit-user-select:none;-moz-user-select:none;user-select:none}li.dropDown{padding:0 .5em;font-size:inherit;line-height:inherit;border-left:.3rem solid rgba(0,0,0,0)}li.dropDown.selected{border-left-color:var(--leftBorder)}li.dropDown span{margin-left:0;height:var(--height);line-height:var(--height)}li.dropDown i{display:none}li.contextMenu{height:unset;padding:.4rem .7rem;font-size:1rem}li.contextMenu span{margin-left:2.2rem}li.contextMenu i{position:absolute;left:.5rem;width:2rem;height:2rem;top:50%;transform:translateY(-50%);background-position:right;background-repeat:no-repeat;background-size:contain}hr{display:block;margin:7px 5px;height:1px;background-color:var(--color)}li.subMenu::after{content:"";position:absolute;right:6px;top:50%;transform:translateY(-50%);border:5px solid rgba(0,0,0,0);border-left-color:var(--arrow-color)}li.subMenu:hover::after{border-left-color:var(--arrow-color-hover)}ul ul{top:4px;left:99%}:host(.show)>ul{display:block;-webkit-animation:fadeInUp 400ms;animation:fadeInUp 400ms}li:hover>ul{display:block;-webkit-animation:fadeInUp 400ms;animation:fadeInUp 400ms}@-webkit-keyframes fadeInUp{from{opacity:0;transform:translate3d(0, calc(var(--height) * 0.6), 0)}to{opacity:1;transform:none}}@keyframes fadeInUp{from{opacity:0;transform:translate3d(0, calc(var(--height) * 0.6), 0)}to{opacity:1;transform:none}}@-webkit-keyframes fadeOut{from{opacity:1}to{opacity:0}}@keyframes fadeOut{from{opacity:1}to{opacity:0}}
@@ -13,13 +13,15 @@ let currentMenuPanel: MenuPanel | null = null;
 type MenuType = 'DropDown' | 'ContextMenu' | 'Hg';
 
 export class MenuPanel extends HTMLElement {
-    private self: MenuPanel;
+    protected self: MenuPanel;
     private root: ShadowRoot;
     private host: HTMLElement;
     private ul: HTMLElement;
     private items: MenuItem[] = [];
+    private subMenu: SubMenuPanel | null = null;
 
     public onClick = (item: MenuItem) => {};
+    public onClose = () => {};
 
     constructor() {
         super();
@@ -36,7 +38,34 @@ export class MenuPanel extends HTMLElement {
                 return;
             }
 
-            this.onClick(this.items[Number(indexStr)]);
+            const item = this.items[Number(indexStr)];
+            this.onClick(item);
+            this.close();
+        };
+
+        this.ul.onmouseover = e => {
+            const li = (e.target as HTMLElement).closest<HTMLElement>('li.subMenu');
+            if (li == null) {
+                return;
+            }
+            this.subMenu?.close();
+            this.subMenu = new SubMenuPanel(this.self);
+
+            this.root.appendChild(this.subMenu);
+            // document.body.appendChild(this.subMenu);
+
+            this.subMenu.onClick = item => {
+                console.log('submenu clicked.');
+
+                this.subMenu?.close();
+                this.close();
+            };
+
+            const items = this.items[Number(li.dataset.index)].children!;
+
+            this.subMenu.show(items, 'ContextMenu');
+            const pos = calcPositionFromParent(this.self, li, this.subMenu);
+            this.subMenu.updatePosition(pos);
         };
     }
 
@@ -85,8 +114,10 @@ export class MenuPanel extends HTMLElement {
     }
 
     close() {
+        this.subMenu?.close();
         this.host.classList.remove('show');
         currentMenuPanel = null;
+        this.onClose();
     }
 
     // for DropDown
@@ -128,24 +159,9 @@ function createItemElement(item: MenuItem, index: number) {
     }
     li.appendChild(label);
 
-    // if (item.submenu) {
-    //     var itemIconSubmenu = document.createElement('span');
-    //     itemIconSubmenu.innerHTML = '&#9658;';
-    //     li.appendChild(itemIconSubmenu);
-    //     li.classList.add('jcontexthassubmenu');
-    //     var el_submenu = document.createElement('div');
-
-    //     el_submenu.classList.add('jcontextmenu');
-    //     el_submenu.setAttribute('tabindex', '900');
-
-    //     var submenu = item.submenu;
-    //     for (var i = 0; i < submenu.length; i++) {
-    //         var itemContainerSubMenu = createItemElement(submenu[i]);
-    //         el_submenu.appendChild(itemContainerSubMenu);
-    //     }
-
-    //     li.appendChild(el_submenu);
-    // }
+    if (item.children && item.children.length > 0) {
+        li.classList.add('subMenu');
+    }
 
     return li;
 }
@@ -209,8 +225,58 @@ const dropDown = (() => {
     return { createItem, filterItem, moveSelect };
 })();
 
+export class SubMenuPanel extends MenuPanel {
+    private parent: MenuPanel;
+
+    constructor(parent: MenuPanel) {
+        super();
+        this.parent = parent;
+    }
+
+    close() {
+        this.self.remove();
+    }
+}
+
+const calcPositionFromParent = (
+    parent: Element,
+    target: Element,
+    menu: Element,
+    option: PositionOption = { vertical: 'auto', horizontal: 'auto' }
+) => {
+    const parentRect = parent.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
+
+    const { vertical, horizontal } = option;
+
+    let top = 0;
+    let left = 0;
+
+    if (
+        vertical === 'top' ||
+        (vertical === 'auto' && targetRect.bottom + menuRect.height > window.innerHeight && window.pageYOffset > menuRect.height)
+    ) {
+        top = targetRect.bottom + window.pageYOffset - menuRect.height;
+    } else {
+        top = targetRect.top + window.pageYOffset;
+    }
+
+    if (horizontal === 'left' || (horizontal === 'auto' && targetRect.left + menuRect.width > window.innerWidth)) {
+        left = targetRect.left + window.pageXOffset - menuRect.width;
+    } else {
+        left = targetRect.right + window.pageXOffset;
+    }
+
+    top -= parentRect.top;
+    left -= parentRect.left;
+
+    return { top, left };
+};
+
 function initialize() {
     customElements.define('rui-menupanel', MenuPanel);
+    customElements.define('rui-submenupanel', SubMenuPanel);
     // document.addEventListener('mouseup', function (e) {
     //     if ((e.target as HTMLElement).closest('menu-panel')) {
     //         return;

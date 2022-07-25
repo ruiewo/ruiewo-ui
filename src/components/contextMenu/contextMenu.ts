@@ -48,7 +48,7 @@ export class ContextMenu extends HTMLElement {
         this.menu = new MenuPanel();
         this.root.appendChild(this.menu);
 
-        this.menu.onClick = item => {
+        this.menu.onClose = () => {
             this.close();
         };
 
@@ -93,7 +93,6 @@ export class ContextMenu extends HTMLElement {
     }
 
     close() {
-        this.menu.close();
         currentMenu = null;
     }
 }
