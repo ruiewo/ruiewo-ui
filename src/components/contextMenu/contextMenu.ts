@@ -11,10 +11,12 @@ const template = `<style>${css}</style>${html}`;
 let currentMenu: ContextMenu | null = null;
 
 export type ContextMenuOption = {
+    width: string;
     onSelect: (value: string) => void;
 };
 
 const defaultOption = {
+    width: '20rem',
     onSelect: () => {},
 };
 
@@ -40,6 +42,7 @@ export class ContextMenu extends HTMLElement {
         this.host = this.root.host as HTMLElement;
 
         this.option = Object.assign({}, defaultOption, userOption);
+        this.host.style.width = this.option.width;
         this.items = items;
 
         this.menu = new MenuPanel();
@@ -76,7 +79,7 @@ export class ContextMenu extends HTMLElement {
     show(e: MouseEvent) {
         closeMenuPanel();
 
-        this.menu.show(this.items);
+        this.menu.show(this.items, 'ContextMenu');
         currentMenu = this.self;
 
         console.log('show rui-context');

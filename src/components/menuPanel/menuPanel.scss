@@ -97,12 +97,8 @@ li {
     overflow: hidden;
     cursor: pointer;
     user-select: none;
-
-    span {
-        height: var(--height);
-        line-height: var(--height);
-    }
 }
+
 li.dropDown {
     padding: 0 0.5em;
     font-size: inherit;
@@ -115,6 +111,8 @@ li.dropDown {
 
     span {
         margin-left: 0;
+        height: var(--height);
+        line-height: var(--height);
     }
 
     i {
@@ -123,6 +121,10 @@ li.dropDown {
 }
 
 li.contextMenu {
+    height: unset;
+    padding: 0.4rem 0.7rem;
+    font-size: 1rem;
+
     span {
         margin-left: 2.2rem;
     }

@@ -122,7 +122,7 @@ export class DropDown extends HTMLElement {
     show() {
         closeMenuPanel();
 
-        this.menu.show(this.items);
+        this.menu.show(this.items, 'DropDown');
         currentMenu = this.self;
 
         this.wrapper.classList.add('active');
