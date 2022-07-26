@@ -45,7 +45,7 @@ export class ContextMenu extends HTMLElement {
         this.host.style.width = this.option.width;
         this.items = items;
 
-        this.menu = new MenuPanel();
+        this.menu = new MenuPanel('ContextMenu');
         this.root.appendChild(this.menu);
 
         this.menu.onClose = () => {
@@ -79,7 +79,7 @@ export class ContextMenu extends HTMLElement {
     show(e: MouseEvent) {
         closeMenuPanel();
 
-        this.menu.show(this.items, 'ContextMenu');
+        this.menu.show(this.items);
         currentContextMenu = this.self;
 
         console.log('show rui-context');

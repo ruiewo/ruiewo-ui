@@ -13,6 +13,7 @@ let currentMenuPanel: MenuPanel | null = null;
 type MenuType = 'DropDown' | 'ContextMenu' | 'Hg';
 
 export class MenuPanel extends HTMLElement {
+    public type: MenuType;
     protected self: MenuPanel;
     private root: ShadowRoot;
     private host: HTMLElement;
@@ -23,8 +24,9 @@ export class MenuPanel extends HTMLElement {
     public onClick = (item: MenuItem) => {};
     public onClose = () => {};
 
-    constructor() {
+    constructor(type: MenuType) {
         super();
+        this.type = type;
         this.self = this;
         this.root = this.attachShadow({ mode: 'open' });
         this.root.innerHTML = template;
@@ -33,6 +35,8 @@ export class MenuPanel extends HTMLElement {
         this.ul = this.root.querySelector('ul')!;
 
         this.ul.onclick = e => {
+            console.log('menu onclick');
+
             const indexStr = (e.target as HTMLElement).closest('li')!.dataset.index;
             if (!indexStr) {
                 return;
@@ -56,31 +60,34 @@ export class MenuPanel extends HTMLElement {
             this.root.appendChild(this.subMenu);
 
             this.subMenu.onClick = item => {
+                console.log('submenu onclick');
+
+                this.onClick(item);
                 this.subMenu = null;
                 this.close();
             };
 
             const items = this.items[Number(li.dataset.index)].children!;
 
-            this.subMenu.show(items, 'ContextMenu');
+            this.subMenu.show(items);
             const pos = calcPositionFromParent(this.self, li, this.subMenu);
             this.subMenu.updatePosition(pos);
         };
     }
 
-    show(items: MenuItem[], type: MenuType) {
+    show(items: MenuItem[]) {
         this.items = items;
-        this.create(items, type);
+        this.create(items);
 
         this.host.classList.add('show');
         currentMenuPanel = this.self;
     }
 
-    create(items: MenuItem[], type: MenuType) {
+    create(items: MenuItem[]) {
         this.ul.innerHTML = '';
 
         let createItem: CreateItem;
-        switch (type) {
+        switch (this.type) {
             case 'DropDown':
                 createItem = dropDown.createItem;
                 break;
@@ -228,7 +235,7 @@ export class SubMenuPanel extends MenuPanel {
     private parent: MenuPanel;
 
     constructor(parent: MenuPanel) {
-        super();
+        super(parent.type);
         this.parent = parent;
     }
 

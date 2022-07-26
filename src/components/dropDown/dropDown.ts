@@ -64,7 +64,7 @@ export class DropDown extends HTMLElement {
         }
         this.input.placeholder = this.option.placeholder!;
 
-        this.menu = new MenuPanel();
+        this.menu = new MenuPanel('DropDown');
         this.wrapper.appendChild(this.menu);
 
         this.menu.onClick = item => {
@@ -90,7 +90,7 @@ export class DropDown extends HTMLElement {
                 return;
             }
 
-            this.close();
+            // this.close();
         };
 
         this.input.oninput = () => {
@@ -122,7 +122,7 @@ export class DropDown extends HTMLElement {
     show() {
         closeMenuPanel();
 
-        this.menu.show(this.items, 'DropDown');
+        this.menu.show(this.items);
         currentMenu = this.self;
 
         this.wrapper.classList.add('active');
@@ -149,8 +149,11 @@ export class DropDown extends HTMLElement {
 
             const text = isNullOrWhiteSpace(this.option.textKey) ? (x as string) : (x[this.option.textKey!] as string);
             const value = isNullOrWhiteSpace(this.option.valueKey) ? (x as string) : (x[this.option.valueKey!] as string);
-
-            return { text, value };
+            if (x.children != null) {
+                return { text, value, children: x.children };
+            } else {
+                return { text, value };
+            }
         });
 
         if (this.option.useBlank) {
