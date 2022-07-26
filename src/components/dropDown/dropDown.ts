@@ -35,7 +35,7 @@ export class DropDown extends HTMLElement {
     private root: ShadowRoot;
     private host: HTMLElement;
     private wrapper: HTMLElement;
-    private input: HTMLInputElement;
+    public input: HTMLInputElement; // input is public for usability.
     private menu: MenuPanel;
     private items: MenuItem[] = [];
     private option: DropDownOption;
@@ -68,6 +68,11 @@ export class DropDown extends HTMLElement {
         this.wrapper.appendChild(this.menu);
 
         this.menu.onClick = item => {
+            if (item.children != null) {
+                this.close(); // 最下層以外のクリックは無視する。
+                return;
+            }
+
             this.input.value = item.text;
             this.input.dataset.value = item.value;
 
@@ -141,6 +146,11 @@ export class DropDown extends HTMLElement {
         currentMenu = null;
     }
 
+    changeItems(items: any[]) {
+        this.items = this.convert(items);
+        this.show();
+    }
+
     convert(items: any[]): MenuItem[] {
         const menuItems = items.map(x => {
             if (x.type === 'divisor') {
@@ -150,7 +160,9 @@ export class DropDown extends HTMLElement {
             const text = isNullOrWhiteSpace(this.option.textKey) ? (x as string) : (x[this.option.textKey!] as string);
             const value = isNullOrWhiteSpace(this.option.valueKey) ? (x as string) : (x[this.option.valueKey!] as string);
             if (x.children != null) {
-                return { text, value, children: x.children };
+                const children = this.convert(x.children);
+
+                return { text, value, children };
             } else {
                 return { text, value };
             }
