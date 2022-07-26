@@ -1,4 +1,4 @@
-import { calcPositionFromPoint, MenuItem, PositionOption } from '../helper';
+import { calcPosition, calcPositionFromPoint, MenuItem, PositionOption } from '../helper';
 import { MenuPanel } from '../menuPanel/menuPanel';
 
 const css = `
@@ -19,6 +19,7 @@ export type ContextMenuOption = {
     onShow?: (e: MouseEvent) => void;
     onClick?: (e: MouseEvent) => void;
     onClose?: () => void;
+    setPosition?: (e: MouseEvent) => HTMLElement;
 };
 
 const defaultOption = {
@@ -30,6 +31,7 @@ const defaultOption = {
     onShow: undefined,
     onClick: undefined,
     onClose: undefined,
+    setPosition: undefined,
 };
 
 export class ContextMenu extends HTMLElement {
@@ -78,6 +80,11 @@ export class ContextMenu extends HTMLElement {
                 return;
             }
 
+            if (this.option.setPosition != null) {
+                const width = (e.target as HTMLElement)!.offsetWidth;
+                this.menu.style.width = width + 'px';
+            }
+
             // todo fix as cast
             this.show(e as MouseEvent);
         });
@@ -115,8 +122,13 @@ export class ContextMenu extends HTMLElement {
     }
 
     updatePosition(e: MouseEvent) {
-        const { left, top } = calcPositionFromPoint(e, this.menu, this.position);
-        this.menu.updatePosition({ left, top });
+        if (this.option.setPosition != null) {
+            const { left, top } = calcPosition(this.option.setPosition(e), this.menu, this.position);
+            this.menu.updatePosition({ left, top });
+        } else {
+            const { left, top } = calcPositionFromPoint(e, this.menu, this.position);
+            this.menu.updatePosition({ left, top });
+        }
     }
 
     close() {
