@@ -19,7 +19,7 @@ export type DropDownOption = {
     placeholder: string;
     useBlank: boolean;
     useInput: boolean;
-    onSelect: (value: string) => void;
+    onSelect: (item: MenuItem) => void;
 };
 const defaultOption = {
     valueKey: 'value',
@@ -64,7 +64,7 @@ export class DropDown extends HTMLElement {
         }
         this.input.placeholder = this.option.placeholder!;
 
-        this.menu = new MenuPanel('DropDown');
+        this.menu = new MenuPanel('dropDown');
         this.wrapper.appendChild(this.menu);
 
         this.menu.onClick = item => {
@@ -74,7 +74,7 @@ export class DropDown extends HTMLElement {
             // functionによる代入ではinputの変更をoninput/onchangeで補足できないため、能動的に発火する。
             triggerEvent('change', this.input);
 
-            this.option.onSelect(item.value);
+            this.option.onSelect(item);
 
             this.close();
         };

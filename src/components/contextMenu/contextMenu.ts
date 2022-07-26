@@ -11,13 +11,25 @@ const template = `<style>${css}</style>${html}`;
 let currentContextMenu: ContextMenu | null = null;
 
 export type ContextMenuOption = {
+    event: string;
     width: string;
-    onSelect: (value: string) => void;
+    onSelect: (item: MenuItem) => void; // イベントの一律設定用。メニューごとに個別処理になる場合はMenuItemのonClickへ
+
+    predicate?: (e: MouseEvent) => boolean;
+    onShow?: (e: MouseEvent) => void;
+    onClick?: (e: MouseEvent) => void;
+    onClose?: () => void;
 };
 
 const defaultOption = {
+    event: 'contextmenu',
     width: '20rem',
     onSelect: () => {},
+
+    predicate: undefined,
+    onShow: undefined,
+    onClick: undefined,
+    onClose: undefined,
 };
 
 export class ContextMenu extends HTMLElement {
@@ -45,16 +57,29 @@ export class ContextMenu extends HTMLElement {
         this.host.style.width = this.option.width;
         this.items = items;
 
-        this.menu = new MenuPanel('ContextMenu');
+        this.menu = new MenuPanel('contextMenu');
         this.root.appendChild(this.menu);
 
+        this.menu.onClick = item => {
+            this.option.onSelect(item);
+        };
+
         this.menu.onClose = () => {
+            if (this.option.onClose != null) {
+                this.option.onClose();
+            }
             currentContextMenu = null;
         };
 
-        element.addEventListener('contextmenu', e => {
+        element.addEventListener(this.option.event, e => {
             e.preventDefault();
-            this.show(e);
+
+            if (this.option.predicate != null && !this.option.predicate(e as MouseEvent)) {
+                return;
+            }
+
+            // todo fix as cast
+            this.show(e as MouseEvent);
         });
 
         // this.input.onkeydown = e => {
@@ -79,10 +104,12 @@ export class ContextMenu extends HTMLElement {
     show(e: MouseEvent) {
         closeMenuPanel();
 
+        if (this.option.onShow != null) {
+            this.option.onShow(e);
+        }
+
         this.menu.show(this.items);
         currentContextMenu = this.self;
-
-        console.log('show rui-context');
 
         this.updatePosition(e);
     }
