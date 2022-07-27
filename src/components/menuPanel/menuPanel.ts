@@ -47,9 +47,20 @@ export class MenuPanel extends HTMLElement {
             this.close();
         };
 
+        let currentLi: HTMLElement | null = null;
         this.ul.onmouseover = e => {
-            const li = (e.target as HTMLElement).closest<HTMLElement>('li.subMenu');
-            if (li == null) {
+            const target = e.target as HTMLElement;
+            if (target.nodeName !== 'LI') {
+                return;
+            }
+
+            if (currentLi == target) {
+                return;
+            }
+
+            currentLi = target;
+
+            if (!target.classList.contains('subMenu')) {
                 this.subMenu?.close();
                 return;
             }
@@ -65,10 +76,10 @@ export class MenuPanel extends HTMLElement {
                 this.close();
             };
 
-            const items = this.items[Number(li.dataset.index)].children!;
+            const items = this.items[Number(target.dataset.index)].children!;
 
             this.subMenu.show(items);
-            const pos = calcPositionFromParent(this.self, li, this.subMenu);
+            const pos = calcPositionFromParent(this.self, target, this.subMenu);
             this.subMenu.updatePosition(pos);
         };
     }
