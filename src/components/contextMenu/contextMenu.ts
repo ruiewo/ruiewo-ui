@@ -16,10 +16,6 @@ export type ContextMenuOption = {
     onSelect: (item: MenuItem) => void; // イベントの一律設定用。メニューごとに個別処理になる場合はMenuItemのonClickへ
 
     predicate?: (e: MouseEvent) => boolean;
-    onShow?: (e: MouseEvent) => void;
-    onClick?: (e: MouseEvent) => void;
-    onClose?: () => void;
-    setPosition?: (e: MouseEvent) => HTMLElement;
 };
 
 const defaultOption = {
@@ -28,10 +24,6 @@ const defaultOption = {
     onSelect: () => {},
 
     predicate: undefined,
-    onShow: undefined,
-    onClick: undefined,
-    onClose: undefined,
-    setPosition: undefined,
 };
 
 export class ContextMenu extends HTMLElement {
@@ -67,9 +59,6 @@ export class ContextMenu extends HTMLElement {
         };
 
         this.menu.onClose = () => {
-            if (this.option.onClose != null) {
-                this.option.onClose();
-            }
             currentContextMenu = null;
         };
 
@@ -78,11 +67,6 @@ export class ContextMenu extends HTMLElement {
 
             if (this.option.predicate != null && !this.option.predicate(e as MouseEvent)) {
                 return;
-            }
-
-            if (this.option.setPosition != null) {
-                const width = (e.target as HTMLElement)!.offsetWidth;
-                this.menu.style.width = width + 'px';
             }
 
             // todo fix as cast
@@ -111,10 +95,6 @@ export class ContextMenu extends HTMLElement {
     show(e: MouseEvent) {
         closeMenuPanel();
 
-        if (this.option.onShow != null) {
-            this.option.onShow(e);
-        }
-
         this.menu.show(this.items);
         currentContextMenu = this.self;
 
@@ -122,13 +102,8 @@ export class ContextMenu extends HTMLElement {
     }
 
     updatePosition(e: MouseEvent) {
-        if (this.option.setPosition != null) {
-            const { left, top } = calcPosition(this.option.setPosition(e), this.menu, this.position);
-            this.menu.updatePosition({ left, top });
-        } else {
-            const { left, top } = calcPositionFromPoint(e, this.menu, this.position);
-            this.menu.updatePosition({ left, top });
-        }
+        const { left, top } = calcPositionFromPoint(e, this.menu, this.position);
+        this.menu.updatePosition({ left, top });
     }
 
     close() {

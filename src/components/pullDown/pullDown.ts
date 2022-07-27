@@ -16,9 +16,6 @@ export type PullDownOption = {
     onSelect: (item: MenuItem) => void; // イベントの一律設定用。メニューごとに個別処理になる場合はMenuItemのonClickへ
 
     predicate?: (e: MouseEvent) => boolean;
-    onShow?: (e: MouseEvent) => void;
-    onClick?: (e: MouseEvent) => void;
-    onClose?: () => void;
     setPosition?: (e: MouseEvent) => HTMLElement;
 };
 
@@ -28,9 +25,6 @@ const defaultOption = {
     onSelect: () => {},
 
     predicate: undefined,
-    onShow: undefined,
-    onClick: undefined,
-    onClose: undefined,
     setPosition: undefined,
 };
 
@@ -59,7 +53,7 @@ export class PullDown extends HTMLElement {
         this.host.style.width = this.option.width;
         this.items = items;
 
-        this.menu = new MenuPanel('contextMenu');
+        this.menu = new MenuPanel('dropDown');
         this.root.appendChild(this.menu);
 
         this.menu.onClick = item => {
@@ -67,9 +61,6 @@ export class PullDown extends HTMLElement {
         };
 
         this.menu.onClose = () => {
-            if (this.option.onClose != null) {
-                this.option.onClose();
-            }
             currentContextMenu = null;
         };
 
@@ -80,9 +71,8 @@ export class PullDown extends HTMLElement {
                 return;
             }
 
-            if (this.option.setPosition != null) {
-                const width = (e.target as HTMLElement)!.offsetWidth;
-                this.menu.style.width = width + 'px';
+            if (typeof this.option.setPosition != 'function') {
+                return;
             }
 
             // todo fix as cast
@@ -90,12 +80,8 @@ export class PullDown extends HTMLElement {
         });
     }
 
-    show(e: MouseEvent) {
+    private show(e: MouseEvent) {
         closeMenuPanel();
-
-        if (this.option.onShow != null) {
-            this.option.onShow(e);
-        }
 
         this.menu.show(this.items);
         currentContextMenu = this.self;
@@ -104,13 +90,13 @@ export class PullDown extends HTMLElement {
     }
 
     updatePosition(e: MouseEvent) {
-        if (this.option.setPosition != null) {
-            const { left, top } = calcPosition(this.option.setPosition(e), this.menu, this.position);
-            this.menu.updatePosition({ left, top });
-        } else {
-            const { left, top } = calcPositionFromPoint(e, this.menu, this.position);
-            this.menu.updatePosition({ left, top });
-        }
+        const target = this.option.setPosition!(e as MouseEvent);
+
+        const width = target.offsetWidth;
+        this.menu.style.width = width + 'px';
+
+        const { left, top } = calcPosition(target, this.menu, this.position);
+        this.menu.updatePosition({ left, top });
     }
 
     close() {
