@@ -26,7 +26,7 @@ export const calcPosition = (target: Element, menu: Element, option: PositionOpt
 
     if (
         vertical === 'top' ||
-        (vertical === 'auto' && targetRect.bottom + menuRect.height > window.innerHeight && window.pageYOffset > menuRect.height)
+        (vertical === 'auto' && targetRect.bottom + menuRect.height > window.innerHeight && targetRect.top + window.pageYOffset > menuRect.height)
     ) {
         top = targetRect.top + window.pageYOffset - menuRect.height;
     } else {
@@ -53,7 +53,7 @@ export const calcPositionH = (target: Element, menu: Element, option: PositionOp
 
     if (
         vertical === 'top' ||
-        (vertical === 'auto' && targetRect.bottom + menuRect.height > window.innerHeight && window.pageYOffset > menuRect.height)
+        (vertical === 'auto' && targetRect.bottom + menuRect.height > window.innerHeight && targetRect.top + window.pageYOffset > menuRect.height)
     ) {
         top = targetRect.bottom + window.pageYOffset - menuRect.height;
     } else {

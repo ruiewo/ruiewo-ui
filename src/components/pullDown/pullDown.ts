@@ -94,6 +94,8 @@ export class PullDown extends HTMLElement {
 
         const width = target.offsetWidth;
         this.menu.style.width = width + 'px';
+        const height = target.offsetHeight;
+        this.menu.style.setProperty('--height', height + 'px');
 
         const { left, top } = calcPosition(target, this.menu, this.position);
         this.menu.updatePosition({ left, top });
