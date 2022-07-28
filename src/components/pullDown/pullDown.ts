@@ -1,4 +1,5 @@
-import { calcPosition, calcPositionFromPoint, MenuItem, PositionOption } from '../helper';
+import { isNullOrWhiteSpace } from '../../utility/utility';
+import { calcPosition, MenuItem, PositionOption } from '../helper';
 import { MenuPanel } from '../menuPanel/menuPanel';
 
 const css = `
@@ -12,7 +13,9 @@ let currentContextMenu: PullDown | null = null;
 
 export type PullDownOption = {
     event: string;
-    width: string;
+    valueKey: string;
+    textKey: string;
+    useBlank: boolean;
     onSelect: (item: MenuItem) => void; // イベントの一律設定用。メニューごとに個別処理になる場合はMenuItemのonClickへ
 
     predicate?: (e: MouseEvent) => boolean;
@@ -21,7 +24,9 @@ export type PullDownOption = {
 
 const defaultOption = {
     event: 'contextmenu',
-    width: '20rem',
+    valueKey: 'value',
+    textKey: 'text',
+    useBlank: false,
     onSelect: () => {},
 
     predicate: undefined,
@@ -35,13 +40,14 @@ export class PullDown extends HTMLElement {
     private menu: MenuPanel;
     private items: MenuItem[] = [];
     private option: PullDownOption;
+    private positionTarget: HTMLElement | null = null;
 
     private position: PositionOption = {
         vertical: 'auto',
         horizontal: 'auto',
     };
 
-    constructor(element: HTMLElement, items: MenuItem[], userOption?: Partial<PullDownOption>) {
+    constructor(element: HTMLElement, items: any[], userOption?: Partial<PullDownOption>) {
         super();
         this.self = this;
         this.root = this.attachShadow({ mode: 'open' });
@@ -50,8 +56,7 @@ export class PullDown extends HTMLElement {
         this.host = this.root.host as HTMLElement;
 
         this.option = Object.assign({}, defaultOption, userOption);
-        this.host.style.width = this.option.width;
-        this.items = items;
+        this.items = this.convert(items);
 
         this.menu = new MenuPanel('dropDown');
         this.root.appendChild(this.menu);
@@ -83,26 +88,66 @@ export class PullDown extends HTMLElement {
     private show(e: MouseEvent) {
         closeMenuPanel();
 
+        this.positionTarget = this.option.setPosition!(e);
+        if (this.positionTarget == null) {
+            return;
+        }
+
         this.menu.show(this.items);
         currentContextMenu = this.self;
 
-        this.updatePosition(e);
+        this.updatePosition();
     }
 
-    updatePosition(e: MouseEvent) {
-        const target = this.option.setPosition!(e as MouseEvent);
-
-        const width = target.offsetWidth;
+    updatePosition() {
+        const width = this.positionTarget!.offsetWidth;
         this.menu.style.width = width + 'px';
-        const height = target.offsetHeight;
+        const height = this.positionTarget!.offsetHeight;
         this.menu.style.setProperty('--height', height + 'px');
 
-        const { left, top } = calcPosition(target, this.menu, this.position);
+        const { left, top } = calcPosition(this.positionTarget!, this.menu, this.position);
         this.menu.updatePosition({ left, top });
     }
 
     close() {
         this.menu.close();
+        this.positionTarget = null;
+    }
+
+    changeItems(items: any[]) {
+        this.items = this.convert(items);
+        if (this.positionTarget == null) {
+            return;
+        }
+
+        this.menu.show(this.items);
+        currentContextMenu = this.self;
+
+        this.updatePosition();
+    }
+
+    convert(items: any[]): MenuItem[] {
+        const menuItems = items.map(x => {
+            if (x.type === 'divisor') {
+                return { text: '', value: '', type: 'divisor' };
+            }
+
+            const text = isNullOrWhiteSpace(this.option.textKey) ? (x as string) : (x[this.option.textKey!] as string);
+            const value = isNullOrWhiteSpace(this.option.valueKey) ? (x as string) : (x[this.option.valueKey!] as string);
+            if (x.children != null) {
+                const children = this.convert(x.children);
+
+                return { text, value, children };
+            } else {
+                return { text, value };
+            }
+        });
+
+        if (this.option.useBlank) {
+            menuItems.unshift({ text: '', value: '' });
+        }
+
+        return menuItems as MenuItem[];
     }
 }
 
