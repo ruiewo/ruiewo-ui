@@ -64,7 +64,7 @@ export class TreeSelect extends HTMLElement {
         }
         this.input.placeholder = this.option.placeholder!;
 
-        this.menu = new MenuPanel('dropDown');
+        this.menu = new MenuPanel('treeSelect');
         this.wrapper.appendChild(this.menu);
 
         this.menu.onClick = item => {

@@ -18,6 +18,11 @@
     --fontSize: 1.5rem;
     --leftBorder: dimgray;
 
+    // treeSelect
+    --expanderWidth: var(--fontSize);
+    --expanderBorderWidth: calc(var(--expanderWidth) * 0.5);
+    --focus-theme-color: var(--theme-color);
+
     position: absolute;
     display: block;
     width: inherit;
@@ -100,7 +105,7 @@ li {
     height: var(--height);
     padding: 0.4rem 0.7rem;
     color: var(--color);
-    border: 1px solid transparent;
+    // border: 1px solid transparent;
     font-size: var(--fontSize);
     text-align: left;
     white-space: nowrap;
@@ -154,6 +159,142 @@ li.contextMenu {
     }
 }
 
+// treeSelect
+ul.treeSelect {
+    padding-left: 5px !important;
+}
+.buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    min-height: 30px;
+    padding: 0.5rem 0;
+
+    button {
+        width: 8rem;
+        height: 2rem;
+        line-height: 2rem;
+        padding: 0 1rem;
+    }
+}
+li.treeSelect {
+    height: auto;
+    min-height: var(--height);
+    padding: 0;
+
+    &:hover {
+        background-color: var(--background-hover);
+    }
+
+    > span {
+        height: var(--height);
+        line-height: var(--height);
+        vertical-align: middle;
+    }
+
+    .expander {
+        display: inline-block;
+        vertical-align: middle;
+        width: var(--expanderWidth);
+        cursor: pointer;
+        position: relative;
+        transition: transform 150ms ease-out;
+
+        &:before {
+            position: absolute;
+            top: var(--expanderBorderWidth);
+            display: block;
+            content: '';
+            border: var(--expanderBorderWidth) solid transparent;
+            border-top: var(--expanderBorderWidth) solid var(--foreground-color);
+            transition: border-color 150ms;
+        }
+        &:hover:before {
+            border-top: var(--expanderBorderWidth) solid var(--focus-theme-color);
+        }
+    }
+
+    .checkbox {
+        display: inline-block;
+        vertical-align: middle;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        position: relative;
+
+        &:before {
+            transition: all 0.3s;
+            cursor: pointer;
+            position: absolute;
+            inset: 0;
+            margin: auto;
+            content: '';
+            display: block;
+            width: 18px;
+            height: 18px;
+            border: 1px solid #d9d9d9;
+            border-radius: 2px;
+            /* top: -0.1em; */
+            // 日本語は縦に長いため微調整入れた方がいい
+        }
+    }
+
+    &.bottomLayer > .checkbox {
+        margin-left: var(--fontSize);
+    }
+
+    .checkbox:hover:before {
+        box-shadow: 0 0 2px 1px #1890ff;
+    }
+    .checked > .checkbox:before {
+        background-color: #1890ff;
+        border-color: #1890ff;
+    }
+    .checked > .checkbox:after {
+        position: absolute;
+        content: '';
+        display: block;
+        top: -1px;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+        width: 5px;
+        height: 9px;
+        border: 2px solid #fff;
+        border-top: none;
+        border-left: none;
+        transform: rotate(45deg);
+    }
+    .halfChecked > .checkbox:before {
+        background-color: #1890ff;
+        border-color: #1890ff;
+    }
+    .halfChecked > .checkbox:after {
+        position: absolute;
+        content: '';
+        display: block;
+        inset: 0;
+        margin: auto;
+        width: 10px;
+        height: 2px;
+        background-color: #fff;
+    }
+    .label {
+        padding: 0 5px;
+        display: inline-block;
+        width: calc(100% - 40px);
+    }
+
+    .treeSelectList {
+        // background-color: var(--twTreeSelectListBackground);
+        // width: 100%;
+        padding-left: 20px;
+        height: auto;
+        max-height: unset;
+    }
+}
+
 hr {
     display: block;
     margin: 7px 5px;
@@ -177,19 +318,19 @@ li.subMenu {
     }
 }
 
-ul ul {
-    top: 4px;
-    left: 99%;
-}
+// ul ul {
+//     top: 4px;
+//     left: 99%;
+// }
 
 :host(.show) > ul {
     display: block;
     animation: fadeInUp 400ms;
 }
-li:hover > ul {
-    display: block;
-    animation: fadeInUp 400ms;
-}
+// li:hover > ul {
+//     display: block;
+//     animation: fadeInUp 400ms;
+// }
 
 @keyframes fadeInUp {
     from {
