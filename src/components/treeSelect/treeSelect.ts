@@ -1,4 +1,4 @@
-import { isNullOrWhiteSpace, triggerEvent } from '../../utility/utility';
+import { escapedRegex, isNullOrWhiteSpace, triggerEvent } from '../../utility/utility';
 import { MenuItem, PositionOption } from '../helper';
 import { MenuPanel } from '../menuPanel/menuPanel';
 
@@ -89,9 +89,9 @@ export class TreeSelect extends HTMLElement {
             if (target.nodeName === 'INPUT') {
                 target.focus();
                 this.show();
-                if (this.option.useInput) {
-                    this.menu.filter(this.input.value);
-                }
+                // if (this.option.useInput) {
+                //     this.menu.filter(this.input.value);
+                // }
                 return;
             }
 
@@ -99,10 +99,7 @@ export class TreeSelect extends HTMLElement {
         };
 
         this.input.oninput = () => {
-            this.input.dataset.value = '';
-            if (this.option.useInput) {
-                this.menu.filter(this.input.value);
-            }
+            listWorker.filterSelectPanelItem(this.input, this.menu.ul);
         };
 
         this.input.onkeydown = e => {
@@ -120,6 +117,30 @@ export class TreeSelect extends HTMLElement {
                     break;
                 default:
                     break;
+            }
+        };
+
+        this.menu.ul.onmouseup = e => {
+            const target = e.target as HTMLElement;
+
+            if (target.classList.contains('expander')) {
+                const selectedItem = target.closest<HTMLElement>('.treeSelect')!;
+                selectedItem.classList.toggle('closed');
+                return;
+            }
+
+            if (target.classList.contains('checkbox') || target.classList.contains('label')) {
+                const currentItem = target.closest<HTMLElement>('.treeSelect')!;
+                const childItems = currentItem.querySelectorAll<HTMLElement>('.treeSelect');
+                if (currentItem.classList.contains('checked')) {
+                    listWorker.uncheck(currentItem);
+                    childItems.forEach(listWorker.uncheck);
+                } else {
+                    listWorker.check(currentItem);
+                    childItems.forEach(listWorker.check);
+                }
+                listWorker.checkParentRecursively(currentItem);
+                return;
             }
         };
     }
@@ -204,6 +225,125 @@ export class TreeSelect extends HTMLElement {
         triggerEvent('change', this.input);
     }
 }
+
+const listWorker = (() => {
+    function checkParentRecursively(item: HTMLElement) {
+        const parentItem = (item.parentNode as HTMLElement).closest<HTMLElement>('.treeSelect:not(.wrapper)');
+        if (!parentItem) {
+            return;
+        }
+
+        if (item.classList.contains('halfChecked')) {
+            if (parentItem.classList.contains('halfChecked')) {
+                // already half checked. cause no affect.
+                return;
+            } else {
+                listWorker.halfCheck(parentItem);
+            }
+        } else if (item.classList.contains('checked')) {
+            const notCheckedItem = Array.prototype.some.call(item.parentNode!.children, sibling => sibling.matches('.treeSelect:not(.checked)'));
+            if (notCheckedItem) {
+                listWorker.halfCheck(parentItem);
+            } else {
+                listWorker.check(parentItem);
+            }
+        } else {
+            const checkedItem = Array.prototype.some.call(item.parentNode!.children, sibling =>
+                sibling.matches('.treeSelect.checked, .treeSelect.halfChecked')
+            );
+            if (checkedItem) {
+                listWorker.halfCheck(parentItem);
+            } else {
+                listWorker.uncheck(parentItem);
+            }
+        }
+        checkParentRecursively(parentItem);
+    }
+
+    function openParentListRecursively(node: HTMLElement) {
+        if ((node.parentNode as HTMLElement).classList.contains('wrapper')) {
+            return;
+        }
+
+        const parentItem = node.parentNode!.parentNode as HTMLElement | null;
+        if (!parentItem || parentItem.nodeName === '#document-fragment' || !parentItem.classList.contains('treeSelect')) {
+            return;
+        }
+
+        if (!parentItem.classList.contains('closed')) {
+            // it is already opened.
+            return;
+        }
+
+        listWorker.open(parentItem);
+        openParentListRecursively(parentItem);
+    }
+
+    function openChildeListRecursively(node: HTMLElement, regExp: RegExp | null = null) {
+        if (!regExp) {
+            node.querySelectorAll<HTMLElement>('.treeSelect').forEach(listWorker.open);
+            return;
+        }
+
+        const childItems = node.querySelectorAll<HTMLElement>(':scope > .treeSelectList > .treeSelect');
+
+        for (const item of childItems) {
+            if (item.querySelector<HTMLElement>('.label')!.textContent!.match(regExp)) {
+                listWorker.open(item);
+                openChildeListRecursively(item);
+                openParentListRecursively(item);
+            } else {
+                listWorker.close(item);
+                openChildeListRecursively(item, regExp);
+            }
+        }
+    }
+
+    function filterSelectPanelItem(input: HTMLInputElement, ul: HTMLElement) {
+        if (input.readOnly) {
+            return;
+        }
+
+        if (isNullOrWhiteSpace(input.value)) {
+            ul.querySelectorAll<HTMLElement>('.treeSelect').forEach(listWorker.close);
+            return;
+        }
+
+        const regExp = escapedRegex(input.value, 'i');
+        const liList = [...ul.children];
+        for (const li of ul.children) {
+            if (li.classList.contains('treeSelect')) {
+                openChildeListRecursively(li as HTMLElement, regExp);
+            }
+        }
+        // ul.querySelectorAll<HTMLElement>('.treeSelect').forEach(li => openChildeListRecursively(li, regExp));
+        // openChildeListRecursively(ul, regExp);
+    }
+
+    return {
+        check: (item: HTMLElement) => {
+            item.classList.add('checked');
+            item.classList.remove('halfChecked');
+        },
+        halfCheck: (item: HTMLElement) => {
+            item.classList.remove('checked');
+            item.classList.add('halfChecked');
+        },
+        uncheck: (item: HTMLElement) => {
+            item.classList.remove('checked');
+            item.classList.remove('halfChecked');
+        },
+        open: (item: HTMLElement) => {
+            item.classList.remove('closed');
+        },
+        close: (item: HTMLElement) => {
+            item.classList.add('closed');
+        },
+        checkParentRecursively,
+        openParentListRecursively,
+        filterSelectPanelItem,
+    };
+})();
 
 function calcPosition(input: Element, menu: Element, option: PositionOption) {
     const inputRect = input.getBoundingClientRect();

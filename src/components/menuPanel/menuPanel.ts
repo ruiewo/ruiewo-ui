@@ -18,7 +18,7 @@ export class MenuPanel extends HTMLElement {
     protected self: MenuPanel;
     protected root: ShadowRoot;
     private host: HTMLElement;
-    private ul: HTMLElement;
+    public ul: HTMLElement;
     private items: MenuItem[] = [];
     private subMenu: SubMenuPanel | null = null;
 
@@ -83,33 +83,6 @@ export class MenuPanel extends HTMLElement {
             const pos = calcPositionFromParent(this.self, target, this.subMenu);
             this.subMenu.updatePosition(pos);
         };
-
-        // for TreeSelect
-        if (this.type == 'treeSelect') {
-            this.ul.onmouseup = (e: MouseEvent) => {
-                const target = e.target as HTMLElement;
-
-                if (target.classList.contains('expander')) {
-                    const selectedItem = target.closest<HTMLElement>('.treeSelect')!;
-                    selectedItem.classList.toggle('closed');
-                    return;
-                }
-
-                if (target.classList.contains('checkbox') || target.classList.contains('label')) {
-                    const currentItem = target.closest<HTMLElement>('.treeSelect')!;
-                    const childItems = currentItem.querySelectorAll<HTMLElement>('.treeSelect');
-                    if (currentItem.classList.contains('checked')) {
-                        treeSelect.uncheck(currentItem);
-                        childItems.forEach(treeSelect.uncheck);
-                    } else {
-                        treeSelect.check(currentItem);
-                        childItems.forEach(treeSelect.check);
-                    }
-                    treeSelect.checkParentRecursively(currentItem);
-                    return;
-                }
-            };
-        }
     }
 
     show(items: MenuItem[]) {
@@ -310,111 +283,8 @@ const treeSelect = (() => {
         return li;
     }
 
-    function checkParentRecursively(item: HTMLElement) {
-        const parentItem = (item.parentNode as HTMLElement).closest<HTMLElement>('.treeSelect:not(.wrapper)');
-        if (!parentItem) {
-            return;
-        }
-
-        if (item.classList.contains('halfChecked')) {
-            if (parentItem.classList.contains('halfChecked')) {
-                // already half checked. cause no affect.
-                return;
-            } else {
-                treeSelect.halfCheck(parentItem);
-            }
-        } else if (item.classList.contains('checked')) {
-            const notCheckedItem = Array.prototype.some.call(item.parentNode!.children, sibling => sibling.matches('.treeSelect:not(.checked)'));
-            if (notCheckedItem) {
-                treeSelect.halfCheck(parentItem);
-            } else {
-                treeSelect.check(parentItem);
-            }
-        } else {
-            const checkedItem = Array.prototype.some.call(item.parentNode!.children, sibling =>
-                sibling.matches('.treeSelect.checked, .treeSelect.halfChecked')
-            );
-            if (checkedItem) {
-                treeSelect.halfCheck(parentItem);
-            } else {
-                treeSelect.uncheck(parentItem);
-            }
-        }
-        checkParentRecursively(parentItem);
-    }
-
-    function openParentListRecursively(node: HTMLElement) {
-        const parentItem = node.parentNode!.parentNode as HTMLElement | null;
-        if (!parentItem || !parentItem.classList.contains('treeSelect')) {
-            return;
-        }
-
-        if (!parentItem.classList.contains('closed')) {
-            // it is already opened.
-            return;
-        }
-
-        treeSelect.open(parentItem);
-        openParentListRecursively(parentItem);
-    }
-
-    function openChildeListRecursively(node: HTMLElement, regExp: RegExp | null = null) {
-        if (!regExp) {
-            node.querySelectorAll<HTMLElement>('.treeSelect').forEach(treeSelect.open);
-            return;
-        }
-
-        const childItems = node.querySelectorAll<HTMLElement>(':scope > .twTreeSelectList > .treeSelect');
-
-        for (const item of childItems) {
-            if (item.querySelector<HTMLElement>('.twTreeLabel')!.textContent!.match(regExp)) {
-                treeSelect.open(item);
-                openChildeListRecursively(item);
-                openParentListRecursively(item);
-            } else {
-                treeSelect.close(item);
-                openChildeListRecursively(item, regExp);
-            }
-        }
-    }
-
-    function filterSelectPanelItem(input: HTMLInputElement) {
-        if (input.readOnly) {
-            return;
-        }
-
-        if (isNullOrWhiteSpace(input.value)) {
-            input.parentNode!.querySelectorAll<HTMLElement>('.treeSelect').forEach(treeSelect.close);
-            return;
-        }
-
-        const regExp = escapedRegex(input.value, 'i');
-        openChildeListRecursively(input.parentNode as HTMLElement, regExp);
-    }
-
     return {
         createItem,
-        check: (item: HTMLElement) => {
-            item.classList.add('checked');
-            item.classList.remove('halfChecked');
-        },
-        halfCheck: (item: HTMLElement) => {
-            item.classList.remove('checked');
-            item.classList.add('halfChecked');
-        },
-        uncheck: (item: HTMLElement) => {
-            item.classList.remove('checked');
-            item.classList.remove('halfChecked');
-        },
-        open: (item: HTMLElement) => {
-            item.classList.remove('closed');
-        },
-        close: (item: HTMLElement) => {
-            item.classList.add('closed');
-        },
-        checkParentRecursively,
-        openParentListRecursively,
-        filterSelectPanelItem,
     };
 })();
 
