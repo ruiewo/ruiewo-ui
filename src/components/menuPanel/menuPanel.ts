@@ -1,8 +1,8 @@
-import { htmlToElement } from '../../index';
+import { escapedRegex, htmlToElement, isNullOrWhiteSpace } from '../../index';
 import { MenuItem, PositionOption } from '../helper';
 
 const css = `
-:host{--color: var(--foreground-color);--color-hover: #eee;--background: var(--active-background-color);--background-hover: var(--lightDark-theme-color);--arrow-color: var(--foreground-color);--arrow-color-hover: #eee;--shadow-color: #fff5;--height: 3rem;--fontSize: 1.5rem;--leftBorder: dimgray;--expanderWidth: var(--fontSize);--expanderBorderWidth: calc(var(--expanderWidth) * 0.5);--focus-theme-color: var(--theme-color);position:absolute;display:block;width:inherit;z-index:1}:host(.dropDown){--height: inherit;--fontSize: inherit}*{padding:0;margin:0;box-sizing:border-box}ul{display:none;list-style-type:none;text-align:left;background-color:var(--background);width:inherit;max-height:calc(var(--height)*8);overflow-y:auto;z-index:1;box-shadow:0 3px 7px -2px rgba(0,0,0,.4)}:host(.show) ul{display:block}ul.contextMenu{padding:.3rem 0;box-shadow:0px 0px 4px var(--shadow-color)}li{display:block;position:relative;margin:0;padding:0;white-space:nowrap}li.hover,li:hover{color:var(--color-hover);background:var(--background-hover)}li.disabled{opacity:.5;pointer-events:none;cursor:default}li.hidden{display:none}li{display:block;width:100%;height:var(--height);padding:.4rem .7rem;color:var(--color);font-size:var(--fontSize);text-align:left;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;cursor:pointer;-webkit-user-select:none;-moz-user-select:none;user-select:none}li.dropDown{padding:0 .5em;font-size:inherit;line-height:inherit;border-left:.3rem solid rgba(0,0,0,0)}li.dropDown.selected{border-left-color:var(--leftBorder)}li.dropDown span{margin-left:0;height:var(--height);line-height:var(--height)}li.dropDown i{display:none}li.contextMenu{height:unset;padding:.4rem .7rem;font-size:1rem}li.contextMenu span{margin-left:2.2rem}li.contextMenu i{position:absolute;left:.5rem;width:2rem;height:2rem;top:50%;transform:translateY(-50%);background-position:right;background-repeat:no-repeat;background-size:contain}ul.treeSelect{padding-left:5px !important}.buttons{display:flex;flex-direction:row;justify-content:space-around;min-height:30px;padding:.5rem 0}.buttons button{width:8rem;height:2rem;line-height:2rem;padding:0 1rem}li.treeSelect{height:auto;min-height:var(--height);padding:0}li.treeSelect:hover{background-color:var(--background-hover)}li.treeSelect>span{height:var(--height);line-height:var(--height);vertical-align:middle}li.treeSelect .expander{display:inline-block;vertical-align:middle;width:var(--expanderWidth);cursor:pointer;position:relative;transition:transform 150ms ease-out}li.treeSelect .expander:before{position:absolute;top:var(--expanderBorderWidth);display:block;content:"";border:var(--expanderBorderWidth) solid rgba(0,0,0,0);border-top:var(--expanderBorderWidth) solid var(--foreground-color);transition:border-color 150ms}li.treeSelect .expander:hover:before{border-top:var(--expanderBorderWidth) solid var(--focus-theme-color)}li.treeSelect .checkbox{display:inline-block;vertical-align:middle;width:20px;height:20px;cursor:pointer;position:relative}li.treeSelect .checkbox:before{transition:all .3s;cursor:pointer;position:absolute;inset:0;margin:auto;content:"";display:block;width:18px;height:18px;border:1px solid #d9d9d9;border-radius:2px}li.treeSelect.bottomLayer>.checkbox{margin-left:var(--fontSize)}li.treeSelect .checkbox:hover:before{box-shadow:0 0 2px 1px #1890ff}li.treeSelect .checked>.checkbox:before{background-color:#1890ff;border-color:#1890ff}li.treeSelect .checked>.checkbox:after{position:absolute;content:"";display:block;top:-1px;bottom:0;left:0;right:0;margin:auto;width:5px;height:9px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(45deg)}li.treeSelect .halfChecked>.checkbox:before{background-color:#1890ff;border-color:#1890ff}li.treeSelect .halfChecked>.checkbox:after{position:absolute;content:"";display:block;inset:0;margin:auto;width:10px;height:2px;background-color:#fff}li.treeSelect .label{padding:0 5px;display:inline-block;width:calc(100% - 40px)}li.treeSelect .treeSelectList{padding-left:20px;height:auto;max-height:unset}hr{display:block;margin:7px 5px;height:1px;background-color:var(--color)}li.subMenu::after{content:"";position:absolute;right:6px;top:50%;transform:translateY(-50%);border:5px solid rgba(0,0,0,0);border-left-color:var(--arrow-color)}li.subMenu:hover::after{border-left-color:var(--arrow-color-hover)}:host(.show)>ul{display:block;-webkit-animation:fadeInUp 400ms;animation:fadeInUp 400ms}@-webkit-keyframes fadeInUp{from{opacity:0;transform:translate3d(0, calc(var(--height) * 0.6), 0)}to{opacity:1;transform:none}}@keyframes fadeInUp{from{opacity:0;transform:translate3d(0, calc(var(--height) * 0.6), 0)}to{opacity:1;transform:none}}@-webkit-keyframes fadeOut{from{opacity:1}to{opacity:0}}@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+:host{--color: var(--foreground-color);--color-hover: #eee;--background: var(--active-background-color);--background-hover: var(--lightDark-theme-color);--arrow-color: var(--foreground-color);--arrow-color-hover: #eee;--shadow-color: #fff5;--height: 3rem;--fontSize: 1.5rem;--leftBorder: dimgray;--expanderWidth: var(--fontSize);--expanderBorderWidth: calc(var(--expanderWidth) * 0.5);--focus-theme-color: var(--theme-color);position:absolute;display:block;width:inherit;z-index:1}:host(.dropDown){--height: inherit;--fontSize: inherit}*{padding:0;margin:0;box-sizing:border-box}ul{display:none;list-style-type:none;text-align:left;background-color:var(--background);width:inherit;max-height:calc(var(--height)*8);overflow-y:auto;z-index:1;box-shadow:0 3px 7px -2px rgba(0,0,0,.4)}:host(.show) ul{display:block}ul.contextMenu{padding:.3rem 0;box-shadow:0px 0px 4px var(--shadow-color)}li{display:block;position:relative;margin:0;padding:0;white-space:nowrap}li.hover,li:hover{color:var(--color-hover);background:var(--background-hover)}li.disabled{opacity:.5;pointer-events:none;cursor:default}li.hidden{display:none}li{display:block;width:100%;height:var(--height);padding:.4rem .7rem;color:var(--color);font-size:var(--fontSize);text-align:left;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;cursor:pointer;-webkit-user-select:none;-moz-user-select:none;user-select:none}li.dropDown{padding:0 .5em;font-size:inherit;line-height:inherit;border-left:.3rem solid rgba(0,0,0,0)}li.dropDown.selected{border-left-color:var(--leftBorder)}li.dropDown span{margin-left:0;height:var(--height);line-height:var(--height)}li.dropDown i{display:none}li.contextMenu{height:unset;padding:.4rem .7rem;font-size:1rem}li.contextMenu span{margin-left:2.2rem}li.contextMenu i{position:absolute;left:.5rem;width:2rem;height:2rem;top:50%;transform:translateY(-50%);background-position:right;background-repeat:no-repeat;background-size:contain}ul.treeSelect{padding-left:5px !important}.buttons{display:flex;flex-direction:row;justify-content:space-around;min-height:30px;padding:.5rem 0}.buttons button{width:8rem;height:2rem;line-height:2rem;padding:0 1rem}li.treeSelect{height:auto;min-height:var(--height);padding:0}li.treeSelect:hover{background-color:var(--background-hover)}li.treeSelect>span{height:var(--height);line-height:var(--height);vertical-align:middle}li.treeSelect .expander{display:inline-block;vertical-align:middle;width:var(--expanderWidth);cursor:pointer;position:relative;transition:transform 150ms ease-out}li.treeSelect .expander:before{position:absolute;top:var(--expanderBorderWidth);display:block;content:"";border:var(--expanderBorderWidth) solid rgba(0,0,0,0);border-top:var(--expanderBorderWidth) solid var(--foreground-color);transition:border-color 150ms}li.treeSelect .expander:hover:before{border-top:var(--expanderBorderWidth) solid var(--focus-theme-color)}li.treeSelect.closed>.expander{transform:rotate(-90deg)}li.treeSelect.closed>.treeSelectList{display:none}li.treeSelect .checkbox{display:inline-block;vertical-align:middle;width:20px;height:20px;cursor:pointer;position:relative}li.treeSelect .checkbox:before{transition:all .3s;cursor:pointer;position:absolute;inset:0;margin:auto;content:"";display:block;width:18px;height:18px;border:1px solid #d9d9d9;border-radius:2px}li.treeSelect.bottomLayer>.checkbox{margin-left:var(--fontSize)}li.treeSelect .checkbox:hover:before{box-shadow:0 0 2px 1px #1890ff}li.treeSelect.checked>.checkbox:before{background-color:#1890ff;border-color:#1890ff}li.treeSelect.checked>.checkbox:after{position:absolute;content:"";display:block;top:-1px;bottom:0;left:0;right:0;margin:auto;width:5px;height:9px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(45deg)}li.treeSelect.halfChecked>.checkbox:before{background-color:#1890ff;border-color:#1890ff}li.treeSelect.halfChecked>.checkbox:after{position:absolute;content:"";display:block;inset:0;margin:auto;width:10px;height:2px;background-color:#fff}li.treeSelect .label{padding:0 5px;display:inline-block;width:calc(100% - 40px)}li.treeSelect .treeSelectList{padding-left:20px;height:auto;max-height:unset}hr{display:block;margin:7px 5px;height:1px;background-color:var(--color)}li.subMenu::after{content:"";position:absolute;right:6px;top:50%;transform:translateY(-50%);border:5px solid rgba(0,0,0,0);border-left-color:var(--arrow-color)}li.subMenu:hover::after{border-left-color:var(--arrow-color-hover)}:host(.show)>ul{display:block;-webkit-animation:fadeInUp 400ms;animation:fadeInUp 400ms}@-webkit-keyframes fadeInUp{from{opacity:0;transform:translate3d(0, calc(var(--height) * 0.6), 0)}to{opacity:1;transform:none}}@keyframes fadeInUp{from{opacity:0;transform:translate3d(0, calc(var(--height) * 0.6), 0)}to{opacity:1;transform:none}}@-webkit-keyframes fadeOut{from{opacity:1}to{opacity:0}}@keyframes fadeOut{from{opacity:1}to{opacity:0}}
 `;
 const html = `
 <ul class="wrapper"></ul>
@@ -83,6 +83,33 @@ export class MenuPanel extends HTMLElement {
             const pos = calcPositionFromParent(this.self, target, this.subMenu);
             this.subMenu.updatePosition(pos);
         };
+
+        // for TreeSelect
+        if (this.type == 'treeSelect') {
+            this.ul.onmouseup = (e: MouseEvent) => {
+                const target = e.target as HTMLElement;
+
+                if (target.classList.contains('expander')) {
+                    const selectedItem = target.closest<HTMLElement>('.treeSelect')!;
+                    selectedItem.classList.toggle('closed');
+                    return;
+                }
+
+                if (target.classList.contains('checkbox') || target.classList.contains('label')) {
+                    const currentItem = target.closest<HTMLElement>('.treeSelect')!;
+                    const childItems = currentItem.querySelectorAll<HTMLElement>('.treeSelect');
+                    if (currentItem.classList.contains('checked')) {
+                        treeSelect.uncheck(currentItem);
+                        childItems.forEach(treeSelect.uncheck);
+                    } else {
+                        treeSelect.check(currentItem);
+                        childItems.forEach(treeSelect.check);
+                    }
+                    treeSelect.checkParentRecursively(currentItem);
+                    return;
+                }
+            };
+        }
     }
 
     show(items: MenuItem[]) {
@@ -157,6 +184,8 @@ export class MenuPanel extends HTMLElement {
     selectPrev() {
         dropDown.moveSelect(this.ul, false);
     }
+
+    // for TreeSelect
 }
 
 type CreateItem = (item: MenuItem, index: number) => HTMLElement;
@@ -281,7 +310,112 @@ const treeSelect = (() => {
         return li;
     }
 
-    return { createItem };
+    function checkParentRecursively(item: HTMLElement) {
+        const parentItem = (item.parentNode as HTMLElement).closest<HTMLElement>('.treeSelect:not(.wrapper)');
+        if (!parentItem) {
+            return;
+        }
+
+        if (item.classList.contains('halfChecked')) {
+            if (parentItem.classList.contains('halfChecked')) {
+                // already half checked. cause no affect.
+                return;
+            } else {
+                treeSelect.halfCheck(parentItem);
+            }
+        } else if (item.classList.contains('checked')) {
+            const notCheckedItem = Array.prototype.some.call(item.parentNode!.children, sibling => sibling.matches('.treeSelect:not(.checked)'));
+            if (notCheckedItem) {
+                treeSelect.halfCheck(parentItem);
+            } else {
+                treeSelect.check(parentItem);
+            }
+        } else {
+            const checkedItem = Array.prototype.some.call(item.parentNode!.children, sibling =>
+                sibling.matches('.treeSelect.checked, .treeSelect.halfChecked')
+            );
+            if (checkedItem) {
+                treeSelect.halfCheck(parentItem);
+            } else {
+                treeSelect.uncheck(parentItem);
+            }
+        }
+        checkParentRecursively(parentItem);
+    }
+
+    function openParentListRecursively(node: HTMLElement) {
+        const parentItem = node.parentNode!.parentNode as HTMLElement | null;
+        if (!parentItem || !parentItem.classList.contains('treeSelect')) {
+            return;
+        }
+
+        if (!parentItem.classList.contains('closed')) {
+            // it is already opened.
+            return;
+        }
+
+        treeSelect.open(parentItem);
+        openParentListRecursively(parentItem);
+    }
+
+    function openChildeListRecursively(node: HTMLElement, regExp: RegExp | null = null) {
+        if (!regExp) {
+            node.querySelectorAll<HTMLElement>('.treeSelect').forEach(treeSelect.open);
+            return;
+        }
+
+        const childItems = node.querySelectorAll<HTMLElement>(':scope > .twTreeSelectList > .treeSelect');
+
+        for (const item of childItems) {
+            if (item.querySelector<HTMLElement>('.twTreeLabel')!.textContent!.match(regExp)) {
+                treeSelect.open(item);
+                openChildeListRecursively(item);
+                openParentListRecursively(item);
+            } else {
+                treeSelect.close(item);
+                openChildeListRecursively(item, regExp);
+            }
+        }
+    }
+
+    function filterSelectPanelItem(input: HTMLInputElement) {
+        if (input.readOnly) {
+            return;
+        }
+
+        if (isNullOrWhiteSpace(input.value)) {
+            input.parentNode!.querySelectorAll<HTMLElement>('.treeSelect').forEach(treeSelect.close);
+            return;
+        }
+
+        const regExp = escapedRegex(input.value, 'i');
+        openChildeListRecursively(input.parentNode as HTMLElement, regExp);
+    }
+
+    return {
+        createItem,
+        check: (item: HTMLElement) => {
+            item.classList.add('checked');
+            item.classList.remove('halfChecked');
+        },
+        halfCheck: (item: HTMLElement) => {
+            item.classList.remove('checked');
+            item.classList.add('halfChecked');
+        },
+        uncheck: (item: HTMLElement) => {
+            item.classList.remove('checked');
+            item.classList.remove('halfChecked');
+        },
+        open: (item: HTMLElement) => {
+            item.classList.remove('closed');
+        },
+        close: (item: HTMLElement) => {
+            item.classList.add('closed');
+        },
+        checkParentRecursively,
+        openParentListRecursively,
+        filterSelectPanelItem,
+    };
 })();
 
 export class SubMenuPanel extends MenuPanel {

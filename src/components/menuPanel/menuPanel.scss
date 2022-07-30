@@ -214,6 +214,15 @@ li.treeSelect {
         }
     }
 
+    &.closed {
+        > .expander {
+            transform: rotate(-90deg);
+        }
+        > .treeSelectList {
+            display: none;
+        }
+    }
+
     .checkbox {
         display: inline-block;
         vertical-align: middle;
@@ -246,11 +255,11 @@ li.treeSelect {
     .checkbox:hover:before {
         box-shadow: 0 0 2px 1px #1890ff;
     }
-    .checked > .checkbox:before {
+    &.checked > .checkbox:before {
         background-color: #1890ff;
         border-color: #1890ff;
     }
-    .checked > .checkbox:after {
+    &.checked > .checkbox:after {
         position: absolute;
         content: '';
         display: block;
@@ -266,11 +275,11 @@ li.treeSelect {
         border-left: none;
         transform: rotate(45deg);
     }
-    .halfChecked > .checkbox:before {
+    &.halfChecked > .checkbox:before {
         background-color: #1890ff;
         border-color: #1890ff;
     }
-    .halfChecked > .checkbox:after {
+    &.halfChecked > .checkbox:after {
         position: absolute;
         content: '';
         display: block;
