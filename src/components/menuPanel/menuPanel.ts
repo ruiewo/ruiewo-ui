@@ -1,4 +1,4 @@
-import { escapedRegex, htmlToElement, isNullOrWhiteSpace } from '../../index';
+import { htmlToElement } from '../../index';
 import { MenuItem, PositionOption } from '../helper';
 
 const css = `

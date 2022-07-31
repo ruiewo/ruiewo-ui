@@ -160,9 +160,19 @@ export class TreeSelect extends HTMLElement {
         const { top, right, bottom, left } = calcPosition(this.input, this.menu, this.position);
         this.menu.updatePosition({ top, right, bottom, left });
     }
+    resetPlaceholder() {
+        const selectedItems = this.menu.ul.querySelectorAll('.checked.bottomLayer');
+        this.input.placeholder =
+            selectedItems.length === 0
+                ? this.input.dataset.placeholder!
+                : selectedItems.length === 1
+                ? selectedItems[0].textContent!
+                : `${selectedItems.length}件選択中`;
+    }
 
     close() {
         this.menu.close();
+        this.resetPlaceholder();
         this.wrapper.classList.remove('active');
         currentMenu = null;
     }
@@ -201,6 +211,26 @@ export class TreeSelect extends HTMLElement {
     }
 
     setValue(value: string | number | null | undefined) {
+        const checkedItems: HTMLElement[] = [];
+        wrapper.querySelectorAll<HTMLElement>('.twTreeSelectItem').forEach(item => {
+            if (strIds.includes(item.dataset.id!)) {
+                listWorker.check(item);
+                listWorker.open(item);
+                checkedItems.push(item);
+            } else {
+                listWorker.uncheck(item);
+                listWorker.close(item);
+            }
+        });
+
+        checkedItems.forEach(item => {
+            listWorker.openParentListRecursively(item);
+            listWorker.checkParentRecursively(item);
+        });
+
+        this.resetPlaceholder(wrapper);
+
+        //
         // const valueStr = value ? value.toString() : '';
         const item = this.items.find(x => x.value === value);
 
