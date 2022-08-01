@@ -1,5 +1,5 @@
 import { isNullOrWhiteSpace, triggerEvent } from '../../utility/utility';
-import { createCommonMenuItem, MenuItem, PositionOption } from '../helper';
+import { calcPositionForDropDown, createCommonMenuItem, MenuItem, PositionOption } from '../helper';
 import { MenuPanel } from '../menuPanel/menuPanel';
 
 const css = `
@@ -141,7 +141,7 @@ export class DropDown extends HTMLElement {
     }
 
     private updatePosition() {
-        const { top, right, bottom, left } = functions.calcPosition(this.input, this.menu, this.position);
+        const { top, right, bottom, left } = calcPositionForDropDown(this.input, this.menu, this.position);
         this.menu.updatePosition({ top, right, bottom, left });
     }
 
@@ -221,35 +221,6 @@ const functions = (() => {
         return fragment;
     }
 
-    function calcPosition(input: Element, menu: Element, option: PositionOption) {
-        const inputRect = input.getBoundingClientRect();
-        const menuRect = menu.getBoundingClientRect();
-
-        const { vertical, horizontal } = option;
-
-        let top: number | undefined = undefined;
-        let left: number | undefined = undefined;
-        let bottom: number | undefined = undefined;
-        let right: number | undefined = undefined;
-
-        if (
-            vertical === 'top' ||
-            (vertical === 'auto' && inputRect.bottom + menuRect.height > window.innerHeight && window.pageYOffset > menuRect.height)
-        ) {
-            bottom = -inputRect.height;
-        } else {
-            top = inputRect.height;
-        }
-
-        if (horizontal === 'right' || (horizontal === 'auto' && inputRect.left + menuRect.width > window.innerWidth)) {
-            right = 0;
-        } else {
-            left = 0;
-        }
-
-        return { top, right, bottom, left };
-    }
-
     function closeMenuPanel() {
         if (currentMenu != null) {
             currentMenu.close();
@@ -293,7 +264,6 @@ const functions = (() => {
 
     return {
         createHtml,
-        calcPosition,
         closeMenuPanel,
         filterItem,
         moveSelect,

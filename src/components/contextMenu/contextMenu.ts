@@ -1,4 +1,4 @@
-import { calcPosition, calcPositionFromPoint, createCommonMenuItem, MenuItem, PositionOption } from '../helper';
+import { calcPositionFromPoint, createCommonMenuItem, MenuItem, PositionOption } from '../helper';
 import { MenuPanel } from '../menuPanel/menuPanel';
 
 const css = `
@@ -79,10 +79,15 @@ export class ContextMenu extends HTMLElement {
         });
     }
 
-    private show(e: MouseEvent) {
+    private show(e: MouseEvent, itemsChanged = false) {
         functions.closeMenuPanel();
 
-        this.menu.show(this.items);
+        if (!this.menu.hasRendered || itemsChanged) {
+            this.menu.show(this.items);
+        } else {
+            this.menu.show();
+        }
+
         currentContextMenu = this.self;
 
         this.updatePosition(e);
