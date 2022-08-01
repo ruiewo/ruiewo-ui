@@ -26,7 +26,7 @@ export class MenuPanel extends HTMLElement {
     public onClick = (item: MenuItem) => {};
     public onClose = () => {};
     private createHtml: CreateMenuItems;
-    private hasHtmlCreated = false;
+    public hasRendered = false;
 
     constructor(type: MenuType, createHtml: CreateMenuItems) {
         super();
@@ -89,18 +89,21 @@ export class MenuPanel extends HTMLElement {
         };
     }
 
+    render(items: MenuItem[]) {
+        this.ul.innerHTML = '';
+        const fragment = this.createHtml(items);
+        this.ul.appendChild(fragment);
+        this.hasRendered = true;
+    }
+
     show(items?: MenuItem[]) {
         if (items != null) {
             this.items = items;
-            const fragment = this.createHtml(this.items);
-            this.ul.appendChild(fragment);
-            this.hasHtmlCreated = true;
+            this.render(this.items);
         }
 
-        if (!this.hasHtmlCreated) {
-            const fragment = this.createHtml(this.items);
-            this.ul.appendChild(fragment);
-            this.hasHtmlCreated = true;
+        if (!this.hasRendered) {
+            this.render(this.items);
         }
 
         this.host.classList.add('show');
@@ -128,72 +131,7 @@ export class MenuPanel extends HTMLElement {
         currentMenuPanel = null;
         this.onClose();
     }
-
-    // for DropDown
-    select() {
-        this.ul.querySelector<HTMLElement>('.selected')?.click();
-    }
-    filter(text: string) {
-        dropDown.filterItem(text, this.ul);
-    }
-    selectNext() {
-        dropDown.moveSelect(this.ul, true);
-    }
-    selectPrev() {
-        dropDown.moveSelect(this.ul, false);
-    }
-
-    // for TreeSelect
 }
-
-type CreateItem = (item: MenuItem, index: number) => HTMLElement;
-
-const dropDown = (() => {
-    function createItem(item: MenuItem, index: number): HTMLElement {
-        const li = createCommonMenuItem(item, index);
-
-        li.classList.add('dropDown');
-
-        return li;
-    }
-
-    function filterItem(text: string, ul: HTMLElement) {
-        const items = ul.querySelectorAll('li');
-        for (const li of items) {
-            const str = new RegExp(text, 'gi');
-            if (li.textContent!.match(str)) {
-                li.classList.remove('hidden');
-            } else {
-                li.classList.add('hidden');
-                li.classList.remove('selected');
-            }
-        }
-    }
-
-    function moveSelect(ul: HTMLElement, isNext = true) {
-        const itemNodeList = ul.querySelectorAll('li:not(.hidden)');
-        if (itemNodeList.length === 0) {
-            return;
-        }
-
-        const items = [...itemNodeList];
-        const currentIndex = items.findIndex(x => x.classList.contains('selected'));
-
-        let newIndex = currentIndex;
-        if (isNext) {
-            newIndex++;
-            newIndex = newIndex >= items.length ? 0 : newIndex;
-        } else {
-            newIndex--;
-            newIndex = newIndex < 0 ? items.length - 1 : newIndex;
-        }
-
-        items[currentIndex]?.classList.remove('selected');
-        items[newIndex].classList.add('selected');
-    }
-
-    return { createItem, filterItem, moveSelect };
-})();
 
 export class SubMenuPanel extends MenuPanel {
     private parent: MenuPanel;

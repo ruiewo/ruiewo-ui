@@ -107,23 +107,23 @@ export class TreeSelect extends HTMLElement {
             listWorker.filterSelectPanelItem(this.input, this.menu.ul);
         };
 
-        this.input.onkeydown = e => {
-            const keyCode = e.code;
+        // this.input.onkeydown = e => {
+        //     const keyCode = e.code;
 
-            switch (keyCode) {
-                case 'Enter':
-                    this.menu.select();
-                    break;
-                case 'ArrowDown':
-                    this.menu.selectNext();
-                    break;
-                case 'ArrowUp':
-                    this.menu.selectPrev();
-                    break;
-                default:
-                    break;
-            }
-        };
+        //     switch (keyCode) {
+        //         case 'Enter':
+        //             this.menu.select();
+        //             break;
+        //         case 'ArrowDown':
+        //             this.menu.selectNext();
+        //             break;
+        //         case 'ArrowUp':
+        //             this.menu.selectPrev();
+        //             break;
+        //         default:
+        //             break;
+        //     }
+        // };
 
         this.menu.ul.onmouseup = e => {
             const target = e.target as HTMLElement;

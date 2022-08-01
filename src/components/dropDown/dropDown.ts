@@ -56,7 +56,6 @@ export class DropDown extends HTMLElement {
         this.input = this.root.querySelector('input')!;
 
         this.option = Object.assign({}, defaultOption, userOption);
-        this.items = this.convert(items);
         this.input.readOnly = this.option.useInput != true;
 
         if (!userOption?.placeholder) {
@@ -64,7 +63,9 @@ export class DropDown extends HTMLElement {
         }
         this.input.placeholder = this.option.placeholder!;
 
-        this.menu = new MenuPanel('dropDown', createHtml);
+        this.items = this.convert(items);
+
+        this.menu = new MenuPanel('dropDown', functions.createHtml);
         this.wrapper.appendChild(this.menu);
 
         this.menu.onClick = item => {
@@ -90,7 +91,7 @@ export class DropDown extends HTMLElement {
                 target.focus();
                 this.show();
                 if (this.option.useInput) {
-                    this.menu.filter(this.input.value);
+                    functions.filterItem(this.input.value, this.menu.ul);
                 }
                 return;
             }
@@ -101,7 +102,7 @@ export class DropDown extends HTMLElement {
         this.input.oninput = () => {
             this.input.dataset.value = '';
             if (this.option.useInput) {
-                this.menu.filter(this.input.value);
+                functions.filterItem(this.input.value, this.menu.ul);
             }
         };
 
@@ -110,13 +111,13 @@ export class DropDown extends HTMLElement {
 
             switch (keyCode) {
                 case 'Enter':
-                    this.menu.select();
+                    this.menu.ul.querySelector<HTMLElement>('.selected')?.click();
                     break;
                 case 'ArrowDown':
-                    this.menu.selectNext();
+                    functions.moveSelect(this.menu.ul, true);
                     break;
                 case 'ArrowUp':
-                    this.menu.selectPrev();
+                    functions.moveSelect(this.menu.ul, false);
                     break;
                 default:
                     break;
@@ -124,10 +125,14 @@ export class DropDown extends HTMLElement {
         };
     }
 
-    show() {
-        closeMenuPanel();
+    show(itemsChanged = false) {
+        functions.closeMenuPanel();
 
-        this.menu.show(this.items);
+        if (!this.menu.hasRendered || itemsChanged) {
+            this.menu.show(this.items);
+        } else {
+            this.menu.show();
+        }
         currentMenu = this.self;
 
         this.wrapper.classList.add('active');
@@ -136,7 +141,7 @@ export class DropDown extends HTMLElement {
     }
 
     updatePosition() {
-        const { top, right, bottom, left } = calcPosition(this.input, this.menu, this.position);
+        const { top, right, bottom, left } = functions.calcPosition(this.input, this.menu, this.position);
         this.menu.updatePosition({ top, right, bottom, left });
     }
 
@@ -148,7 +153,7 @@ export class DropDown extends HTMLElement {
 
     changeItems(items: any[]) {
         this.items = this.convert(items);
-        this.show();
+        this.show(true);
     }
 
     convert(items: any[]): MenuItem[] {
@@ -205,52 +210,97 @@ export class DropDown extends HTMLElement {
     }
 }
 
-function calcPosition(input: Element, menu: Element, option: PositionOption) {
-    const inputRect = input.getBoundingClientRect();
-    const menuRect = menu.getBoundingClientRect();
+const functions = (() => {
+    function createHtml(items: MenuItem[]): DocumentFragment {
+        const fragment = document.createDocumentFragment();
 
-    const { vertical, horizontal } = option;
+        for (let i = 0; i < items.length; i++) {
+            const li = createCommonMenuItem(items[i], i);
+            li.classList.add('dropDown');
+            fragment.append(li);
+        }
 
-    let top: number | undefined = undefined;
-    let left: number | undefined = undefined;
-    let bottom: number | undefined = undefined;
-    let right: number | undefined = undefined;
-
-    if (
-        vertical === 'top' ||
-        (vertical === 'auto' && inputRect.bottom + menuRect.height > window.innerHeight && window.pageYOffset > menuRect.height)
-    ) {
-        bottom = -inputRect.height;
-    } else {
-        top = inputRect.height;
+        return fragment;
     }
 
-    if (horizontal === 'right' || (horizontal === 'auto' && inputRect.left + menuRect.width > window.innerWidth)) {
-        right = 0;
-    } else {
-        left = 0;
+    function calcPosition(input: Element, menu: Element, option: PositionOption) {
+        const inputRect = input.getBoundingClientRect();
+        const menuRect = menu.getBoundingClientRect();
+
+        const { vertical, horizontal } = option;
+
+        let top: number | undefined = undefined;
+        let left: number | undefined = undefined;
+        let bottom: number | undefined = undefined;
+        let right: number | undefined = undefined;
+
+        if (
+            vertical === 'top' ||
+            (vertical === 'auto' && inputRect.bottom + menuRect.height > window.innerHeight && window.pageYOffset > menuRect.height)
+        ) {
+            bottom = -inputRect.height;
+        } else {
+            top = inputRect.height;
+        }
+
+        if (horizontal === 'right' || (horizontal === 'auto' && inputRect.left + menuRect.width > window.innerWidth)) {
+            right = 0;
+        } else {
+            left = 0;
+        }
+
+        return { top, right, bottom, left };
     }
 
-    return { top, right, bottom, left };
-}
-
-function closeMenuPanel() {
-    if (currentMenu != null) {
-        currentMenu.close();
-    }
-}
-
-function createHtml(items: MenuItem[]): DocumentFragment {
-    const fragment = document.createDocumentFragment();
-
-    for (let i = 0; i < items.length; i++) {
-        const li = createCommonMenuItem(items[i], i);
-        li.classList.add('dropDown');
-        fragment.append(li);
+    function closeMenuPanel() {
+        if (currentMenu != null) {
+            currentMenu.close();
+        }
     }
 
-    return fragment;
-}
+    function filterItem(text: string, ul: HTMLElement) {
+        const items = ul.querySelectorAll('li');
+        for (const li of items) {
+            const str = new RegExp(text, 'gi');
+            if (li.textContent!.match(str)) {
+                li.classList.remove('hidden');
+            } else {
+                li.classList.add('hidden');
+                li.classList.remove('selected');
+            }
+        }
+    }
+
+    function moveSelect(ul: HTMLElement, isNext = true) {
+        const itemNodeList = ul.querySelectorAll('li:not(.hidden)');
+        if (itemNodeList.length === 0) {
+            return;
+        }
+
+        const items = [...itemNodeList];
+        const currentIndex = items.findIndex(x => x.classList.contains('selected'));
+
+        let newIndex = currentIndex;
+        if (isNext) {
+            newIndex++;
+            newIndex = newIndex >= items.length ? 0 : newIndex;
+        } else {
+            newIndex--;
+            newIndex = newIndex < 0 ? items.length - 1 : newIndex;
+        }
+
+        items[currentIndex]?.classList.remove('selected');
+        items[newIndex].classList.add('selected');
+    }
+
+    return {
+        createHtml,
+        calcPosition,
+        closeMenuPanel,
+        filterItem,
+        moveSelect,
+    };
+})();
 
 function initialize() {
     customElements.define('rui-dropdown', DropDown);
@@ -259,7 +309,7 @@ function initialize() {
             return;
         }
 
-        closeMenuPanel();
+        functions.closeMenuPanel();
     });
 }
 
