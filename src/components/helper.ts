@@ -15,6 +15,9 @@ export type PositionOption = {
     horizontal: Horizontal;
 };
 
+/**
+ * 画面左上からの位置を求める。targetの上下に要素が出現するパターン用。
+ */
 export const calcPosition = (target: Element, menu: Element, option: PositionOption = { vertical: 'auto', horizontal: 'auto' }) => {
     const targetRect = target.getBoundingClientRect();
     const menuRect = menu.getBoundingClientRect();
@@ -42,6 +45,9 @@ export const calcPosition = (target: Element, menu: Element, option: PositionOpt
     return { top, left };
 };
 
+/**
+ * 画面左上からの位置を求める。targetの左右に要素が出現するパターン用。
+ */
 export const calcPositionH = (target: Element, menu: Element, option: PositionOption = { vertical: 'auto', horizontal: 'auto' }) => {
     const targetRect = target.getBoundingClientRect();
     const menuRect = menu.getBoundingClientRect();
@@ -69,6 +75,38 @@ export const calcPositionH = (target: Element, menu: Element, option: PositionOp
     return { top, left };
 };
 
+/**
+ * Inputからの相対位置を求める。ドロップダウン系用。
+ */
+export const calcPositionForDropDown = (input: Element, menu: Element, option: PositionOption) => {
+    const inputRect = input.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
+
+    const { vertical, horizontal } = option;
+
+    let top: number | undefined = undefined;
+    let left: number | undefined = undefined;
+    let bottom: number | undefined = undefined;
+    let right: number | undefined = undefined;
+
+    if (
+        vertical === 'top' ||
+        (vertical === 'auto' && inputRect.bottom + menuRect.height > window.innerHeight && window.pageYOffset > menuRect.height)
+    ) {
+        bottom = -inputRect.height;
+    } else {
+        top = inputRect.height;
+    }
+
+    if (horizontal === 'right' || (horizontal === 'auto' && inputRect.left + menuRect.width > window.innerWidth)) {
+        right = 0;
+    } else {
+        left = 0;
+    }
+
+    return { top, right, bottom, left };
+};
+
 export const calcPositionFromPoint = (e: MouseEvent, menu: Element, option: PositionOption) => {
     const x = e.pageX;
     const y = e.pageY;
@@ -93,4 +131,34 @@ export const calcPositionFromPoint = (e: MouseEvent, menu: Element, option: Posi
     }
 
     return { top, left };
+};
+
+export const createCommonMenuItem = (item: MenuItem, index: number) => {
+    if (item.type === 'divisor') {
+        return document.createElement('hr');
+    }
+
+    const li = document.createElement('li');
+    li.setAttribute('data-index', index.toString());
+
+    if (item.icon) {
+        li.setAttribute('data-icon', item.icon);
+    }
+
+    if (item.onClick) {
+        li.addEventListener('mousedown', e => e.preventDefault());
+        li.addEventListener('mouseup', e => {
+            item.onClick!(e);
+        });
+    }
+
+    const label = document.createElement('span');
+    label.textContent = item.text;
+    li.appendChild(label);
+
+    if (item.children && item.children.length > 0) {
+        li.classList.add('subMenu');
+    }
+
+    return li;
 };

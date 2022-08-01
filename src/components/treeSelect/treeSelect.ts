@@ -1,5 +1,5 @@
-import { escapedRegex, isNullOrWhiteSpace, triggerEvent } from '../../utility/utility';
-import { MenuItem, PositionOption } from '../helper';
+import { escapedRegex, htmlToElement, isNullOrWhiteSpace, triggerEvent } from '../../utility/utility';
+import { MenuItem, PositionOption, calcPositionForDropDown } from '../helper';
 import { MenuPanel } from '../menuPanel/menuPanel';
 
 const css = `
@@ -19,7 +19,7 @@ export type TreeSelectOption = {
     placeholder: string;
     useBlank: boolean;
     useInput: boolean;
-    onSelect: (item: MenuItem) => void;
+    onSelect: (treeSelect: TreeSelect) => void;
 };
 const defaultOption = {
     valueKey: 'value',
@@ -28,6 +28,11 @@ const defaultOption = {
     useBlank: false,
     useInput: false,
     onSelect: () => {},
+};
+
+type GetValuesOption = {
+    onlyValue: boolean;
+    onlyBottomLayer: boolean;
 };
 
 export class TreeSelect extends HTMLElement {
@@ -63,61 +68,22 @@ export class TreeSelect extends HTMLElement {
             this.option.placeholder = this.option.useInput ? '選択/入力して下さい' : '選択して下さい';
         }
         this.input.placeholder = this.option.placeholder!;
+        this.input.dataset.placeholder = this.option.placeholder!;
 
-        this.menu = new MenuPanel('treeSelect');
+        this.menu = new MenuPanel('treeSelect', functions.createHtml);
         this.wrapper.appendChild(this.menu);
-
-        this.menu.onClick = item => {
-            if (item.children != null) {
-                this.close(); // 最下層以外のクリックは無視する。
-                return;
-            }
-
-            this.input.value = item.text;
-            this.input.dataset.value = item.value;
-
-            // functionによる代入ではinputの変更をoninput/onchangeで補足できないため、能動的に発火する。
-            triggerEvent('change', this.input);
-
-            this.option.onSelect(item);
-
-            this.close();
-        };
 
         this.wrapper.onmouseup = e => {
             const target = e.target as HTMLElement;
             if (target.nodeName === 'INPUT') {
                 target.focus();
                 this.show();
-                // if (this.option.useInput) {
-                //     this.menu.filter(this.input.value);
-                // }
                 return;
             }
-
-            // this.close();
         };
 
         this.input.oninput = () => {
             listWorker.filterSelectPanelItem(this.input, this.menu.ul);
-        };
-
-        this.input.onkeydown = e => {
-            const keyCode = e.code;
-
-            switch (keyCode) {
-                case 'Enter':
-                    this.menu.select();
-                    break;
-                case 'ArrowDown':
-                    this.menu.selectNext();
-                    break;
-                case 'ArrowUp':
-                    this.menu.selectPrev();
-                    break;
-                default:
-                    break;
-            }
         };
 
         this.menu.ul.onmouseup = e => {
@@ -140,15 +106,39 @@ export class TreeSelect extends HTMLElement {
                     childItems.forEach(listWorker.check);
                 }
                 listWorker.checkParentRecursively(currentItem);
+
+                this.option.onSelect(this.self);
+
                 return;
             }
         };
     }
+    private setButtonCallback() {
+        const buttons = this.menu.ul.querySelector<HTMLElement>('.buttons')!;
 
-    show() {
-        closeMenuPanel();
+        buttons.onclick = e => {
+            if ((e.target as HTMLElement).classList.contains('clearButton')) {
+                this.menu.ul.querySelectorAll<HTMLElement>('.treeSelect').forEach(item => {
+                    listWorker.uncheck(item);
+                    listWorker.close(item);
+                });
 
-        this.menu.show(this.items);
+                this.input.value = '';
+                this.option.onSelect(this.self);
+            }
+        };
+    }
+
+    private show(itemsChanged = false) {
+        functions.closeMenuPanel();
+
+        if (!this.menu.hasRendered || itemsChanged) {
+            this.menu.show(this.items);
+            this.setButtonCallback();
+        } else {
+            this.menu.show();
+        }
+
         currentMenu = this.self;
 
         this.wrapper.classList.add('active');
@@ -156,11 +146,12 @@ export class TreeSelect extends HTMLElement {
         this.updatePosition();
     }
 
-    updatePosition() {
-        const { top, right, bottom, left } = calcPosition(this.input, this.menu, this.position);
+    private updatePosition() {
+        const { top, right, bottom, left } = calcPositionForDropDown(this.input, this.menu, this.position);
         this.menu.updatePosition({ top, right, bottom, left });
     }
-    resetPlaceholder() {
+
+    private resetPlaceholder() {
         const selectedItems = this.menu.ul.querySelectorAll('.checked.bottomLayer');
         this.input.placeholder =
             selectedItems.length === 0
@@ -179,10 +170,10 @@ export class TreeSelect extends HTMLElement {
 
     changeItems(items: any[]) {
         this.items = this.convert(items);
-        this.show();
+        this.show(true);
     }
 
-    convert(items: any[]): MenuItem[] {
+    private convert(items: any[]): MenuItem[] {
         const menuItems = items.map(x => {
             if (x.type === 'divisor') {
                 return { text: '', value: '', type: 'divisor' };
@@ -206,50 +197,95 @@ export class TreeSelect extends HTMLElement {
         return menuItems as MenuItem[];
     }
 
-    getValue() {
-        return this.input.dataset.value!;
+    getValue(userOption?: Partial<GetValuesOption>) {
+        const defaultOption: GetValuesOption = {
+            onlyValue: true,
+            onlyBottomLayer: true,
+        };
+
+        const option = { ...defaultOption, ...userOption };
+
+        function getCheckItemRecursively(
+            items: MenuItem[],
+            listItems: NodeListOf<HTMLElement>,
+            option: Partial<GetValuesOption>,
+            checkedItems: MenuItem[]
+        ) {
+            listItems.forEach((listItem, index) => {
+                const item = items[index];
+                if (option.onlyBottomLayer) {
+                    if (listItem.classList.contains('bottomLayer')) {
+                        if (listItem.classList.contains('checked')) {
+                            checkedItems.push(item);
+                        }
+                    }
+                } else {
+                    if (listItem.classList.contains('checked')) {
+                        checkedItems.push(item);
+                    }
+                }
+
+                if (item.children && item.children.length > 0) {
+                    getCheckItemRecursively(
+                        item.children,
+                        listItem.querySelectorAll<HTMLElement>(':scope > .treeSelectList > .treeSelect'),
+                        option,
+                        checkedItems
+                    );
+                }
+            });
+        }
+
+        const listItems = this.menu.ul.querySelectorAll<HTMLElement>(':scope > .treeSelect');
+        const checkedItems: MenuItem[] = [];
+
+        getCheckItemRecursively(this.items, listItems, option, checkedItems);
+
+        if (option.onlyValue) {
+            return checkedItems.map(x => x.value);
+        }
+
+        return checkedItems;
     }
 
-    setValue(value: string | number | null | undefined) {
-        const checkedItems: HTMLElement[] = [];
-        wrapper.querySelectorAll<HTMLElement>('.twTreeSelectItem').forEach(item => {
-            if (strIds.includes(item.dataset.id!)) {
-                listWorker.check(item);
-                listWorker.open(item);
-                checkedItems.push(item);
-            } else {
-                listWorker.uncheck(item);
-                listWorker.close(item);
-            }
-        });
+    setValue(values?: string[]) {
+        if (values == null) {
+            values = [];
+        }
 
+        if (!this.menu.hasRendered) {
+            this.show();
+            this.close();
+        }
+
+        function checkItemRecursively(items: MenuItem[], listItems: NodeListOf<HTMLElement>) {
+            items.forEach((item, index) => {
+                const listItem = listItems.item(index);
+                if (values!.includes(item.value)) {
+                    listWorker.check(listItem);
+                    listWorker.open(listItem);
+                } else {
+                    listWorker.uncheck(listItem);
+                    listWorker.close(listItem);
+                }
+
+                if (item.children && item.children.length > 0) {
+                    checkItemRecursively(item.children, listItem.querySelectorAll<HTMLElement>(':scope > .treeSelectList > .treeSelect'));
+                }
+            });
+        }
+
+        const listItems = this.menu.ul.querySelectorAll<HTMLElement>(':scope > .treeSelect');
+        checkItemRecursively(this.items, listItems);
+
+        const checkedItems = this.menu.ul.querySelectorAll<HTMLElement>('.checked');
         checkedItems.forEach(item => {
+            // Only treat towards the upper layer
             listWorker.openParentListRecursively(item);
             listWorker.checkParentRecursively(item);
         });
 
-        this.resetPlaceholder(wrapper);
-
-        //
-        // const valueStr = value ? value.toString() : '';
-        const item = this.items.find(x => x.value === value);
-
-        if (item != null) {
-            this.input.value = item.text;
-            this.input.dataset.value = item.value;
-        } else if (this.option.useBlank) {
-            this.input.value = '';
-            this.input.dataset.value = '';
-        } else {
-            const item = this.items[0];
-            if (item) {
-                this.input.value = item.text;
-                this.input.dataset.value = item.value;
-            } else {
-                this.input.value = '';
-                this.input.dataset.value = '';
-            }
-        }
+        this.resetPlaceholder();
 
         // functionによる代入ではinputの変更をoninput/onchangeで補足できないため、能動的に発火する。
         triggerEvent('change', this.input);
@@ -375,40 +411,60 @@ const listWorker = (() => {
     };
 })();
 
-function calcPosition(input: Element, menu: Element, option: PositionOption) {
-    const inputRect = input.getBoundingClientRect();
-    const menuRect = menu.getBoundingClientRect();
+const functions = (() => {
+    function createHtml(items: MenuItem[]): DocumentFragment {
+        const fragment = document.createDocumentFragment();
+        fragment.append(htmlToElement('<div class="buttons"><button type="button" class="clearButton shrinkButton gray">clear</button></div>'));
 
-    const { vertical, horizontal } = option;
+        for (let i = 0; i < items.length; i++) {
+            const li = createMenuItem(items[i], i);
+            fragment.append(li);
+        }
 
-    let top: number | undefined = undefined;
-    let left: number | undefined = undefined;
-    let bottom: number | undefined = undefined;
-    let right: number | undefined = undefined;
-
-    if (
-        vertical === 'top' ||
-        (vertical === 'auto' && inputRect.bottom + menuRect.height > window.innerHeight && window.pageYOffset > menuRect.height)
-    ) {
-        bottom = -inputRect.height;
-    } else {
-        top = inputRect.height;
+        return fragment;
     }
 
-    if (horizontal === 'right' || (horizontal === 'auto' && inputRect.left + menuRect.width > window.innerWidth)) {
-        right = 0;
-    } else {
-        left = 0;
+    function createMenuItem(item: MenuItem, index: number): HTMLElement {
+        if (item.type === 'divisor') {
+            return document.createElement('hr');
+        }
+
+        const li = htmlToElement(createItemRecursively(item)) as HTMLElement;
+        return li;
     }
 
-    return { top, right, bottom, left };
-}
+    function createItemRecursively(item: MenuItem, depth = 0) {
+        const childExists = item.children && item.children.length > 0;
 
-function closeMenuPanel() {
-    if (currentMenu != null) {
-        currentMenu.close();
+        let li =
+            `<li class="treeSelect closed ${childExists ? '' : 'bottomLayer'}" data-depth="${depth}"}">` +
+            `${childExists ? '<span class="expander"></span>' : ''}` +
+            `<span class="checkbox"></span>` +
+            `<span class="label">${item.text}</span>`;
+
+        if (childExists) {
+            let ul = '<ul class="treeSelectList">';
+            item.children!.forEach(childItem => {
+                ul += createItemRecursively(childItem, depth + 1);
+            });
+            ul += '</ul>';
+            li += ul;
+        }
+        li += '</li>';
+        return li;
     }
-}
+
+    function closeMenuPanel() {
+        if (currentMenu != null) {
+            currentMenu.close();
+        }
+    }
+
+    return {
+        createHtml,
+        closeMenuPanel,
+    };
+})();
 
 function initialize() {
     customElements.define('rui-treeselect', TreeSelect);
@@ -417,7 +473,7 @@ function initialize() {
             return;
         }
 
-        closeMenuPanel();
+        functions.closeMenuPanel();
     });
 }
 
