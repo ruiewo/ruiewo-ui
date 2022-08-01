@@ -70,8 +70,7 @@ export class DropDown extends HTMLElement {
 
         this.menu.onClick = item => {
             if (item.children != null) {
-                this.close(); // 最下層以外のクリックは無視する。
-                return;
+                return; // 最下層以外のクリックは無視する。
             }
 
             this.input.value = item.text;
@@ -81,7 +80,11 @@ export class DropDown extends HTMLElement {
             triggerEvent('change', this.input);
 
             this.option.onSelect(item);
-            this.close();
+        };
+
+        this.menu.onClose = () => {
+            this.wrapper.classList.remove('active');
+            currentMenu = null;
         };
 
         this.wrapper.onmouseup = e => {
@@ -94,8 +97,6 @@ export class DropDown extends HTMLElement {
                 }
                 return;
             }
-
-            // this.close();
         };
 
         this.input.oninput = () => {
@@ -146,8 +147,6 @@ export class DropDown extends HTMLElement {
 
     close() {
         this.menu.close();
-        this.wrapper.classList.remove('active');
-        currentMenu = null;
     }
 
     changeItems(items: any[]) {

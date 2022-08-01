@@ -64,12 +64,10 @@ export class PullDown extends HTMLElement {
 
         this.menu.onClick = item => {
             if (item.children != null) {
-                this.close(); // 最下層以外のクリックは無視する。
-                return;
+                return; // 最下層以外のクリックは無視する。
             }
 
             this.option.onSelect(item);
-            this.close();
         };
 
         this.menu.onClose = () => {

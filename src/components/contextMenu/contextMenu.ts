@@ -49,12 +49,17 @@ export class ContextMenu extends HTMLElement {
 
         this.option = Object.assign({}, defaultOption, userOption);
         this.host.style.width = this.option.width;
+
         this.items = items;
 
-        this.menu = new MenuPanel('contextMenu', createHtml);
+        this.menu = new MenuPanel('contextMenu', functions.createHtml);
         this.root.appendChild(this.menu);
 
         this.menu.onClick = item => {
+            if (item.children != null) {
+                return; // 最下層以外のクリックは無視する。
+            }
+
             this.option.onSelect(item);
         };
 
@@ -72,28 +77,10 @@ export class ContextMenu extends HTMLElement {
             // todo fix as cast
             this.show(e as MouseEvent);
         });
-
-        // this.input.onkeydown = e => {
-        //     const keyCode = e.code;
-
-        //     switch (keyCode) {
-        //         case 'Enter':
-        //             this.menu.select();
-        //             break;
-        //         case 'ArrowDown':
-        //             this.menu.selectNext();
-        //             break;
-        //         case 'ArrowUp':
-        //             this.menu.selectPrev();
-        //             break;
-        //         default:
-        //             break;
-        //     }
-        // };
     }
 
-    show(e: MouseEvent) {
-        closeMenuPanel();
+    private show(e: MouseEvent) {
+        functions.closeMenuPanel();
 
         this.menu.show(this.items);
         currentContextMenu = this.self;
@@ -101,7 +88,7 @@ export class ContextMenu extends HTMLElement {
         this.updatePosition(e);
     }
 
-    updatePosition(e: MouseEvent) {
+    private updatePosition(e: MouseEvent) {
         const { left, top } = calcPositionFromPoint(e, this.menu, this.position);
         this.menu.updatePosition({ left, top });
     }
@@ -111,23 +98,29 @@ export class ContextMenu extends HTMLElement {
     }
 }
 
-function closeMenuPanel() {
-    if (currentContextMenu != null) {
-        currentContextMenu.close();
-    }
-}
-
-function createHtml(items: MenuItem[]): DocumentFragment {
-    const fragment = document.createDocumentFragment();
-
-    for (let i = 0; i < items.length; i++) {
-        const li = createCommonMenuItem(items[i], i);
-        li.classList.add('contextMenu');
-        fragment.append(li);
+const functions = (() => {
+    function closeMenuPanel() {
+        if (currentContextMenu != null) {
+            currentContextMenu.close();
+        }
     }
 
-    return fragment;
-}
+    function createHtml(items: MenuItem[]): DocumentFragment {
+        const fragment = document.createDocumentFragment();
+
+        for (let i = 0; i < items.length; i++) {
+            const li = createCommonMenuItem(items[i], i);
+            li.classList.add('contextMenu');
+            fragment.append(li);
+        }
+
+        return fragment;
+    }
+    return {
+        createHtml,
+        closeMenuPanel,
+    };
+})();
 
 function initialize() {
     customElements.define('rui-contextmenu', ContextMenu);
@@ -136,7 +129,7 @@ function initialize() {
             return;
         }
 
-        closeMenuPanel();
+        functions.closeMenuPanel();
     });
 }
 
