@@ -94,3 +94,33 @@ export const calcPositionFromPoint = (e: MouseEvent, menu: Element, option: Posi
 
     return { top, left };
 };
+
+export const createCommonMenuItem = (item: MenuItem, index: number) => {
+    if (item.type === 'divisor') {
+        return document.createElement('hr');
+    }
+
+    const li = document.createElement('li');
+    li.setAttribute('data-index', index.toString());
+
+    if (item.icon) {
+        li.setAttribute('data-icon', item.icon);
+    }
+
+    if (item.onClick) {
+        li.addEventListener('mousedown', e => e.preventDefault());
+        li.addEventListener('mouseup', e => {
+            item.onClick!(e);
+        });
+    }
+
+    const label = document.createElement('span');
+    label.textContent = item.text;
+    li.appendChild(label);
+
+    if (item.children && item.children.length > 0) {
+        li.classList.add('subMenu');
+    }
+
+    return li;
+};

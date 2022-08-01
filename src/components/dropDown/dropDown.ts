@@ -1,5 +1,5 @@
 import { isNullOrWhiteSpace, triggerEvent } from '../../utility/utility';
-import { MenuItem, PositionOption } from '../helper';
+import { createCommonMenuItem, MenuItem, PositionOption } from '../helper';
 import { MenuPanel } from '../menuPanel/menuPanel';
 
 const css = `
@@ -64,7 +64,7 @@ export class DropDown extends HTMLElement {
         }
         this.input.placeholder = this.option.placeholder!;
 
-        this.menu = new MenuPanel('dropDown');
+        this.menu = new MenuPanel('dropDown', createHtml);
         this.wrapper.appendChild(this.menu);
 
         this.menu.onClick = item => {
@@ -238,6 +238,18 @@ function closeMenuPanel() {
     if (currentMenu != null) {
         currentMenu.close();
     }
+}
+
+function createHtml(items: MenuItem[]): DocumentFragment {
+    const fragment = document.createDocumentFragment();
+
+    for (let i = 0; i < items.length; i++) {
+        const li = createCommonMenuItem(items[i], i);
+        li.classList.add('dropDown');
+        fragment.append(li);
+    }
+
+    return fragment;
 }
 
 function initialize() {

@@ -1,4 +1,4 @@
-import { calcPosition, calcPositionFromPoint, MenuItem, PositionOption } from '../helper';
+import { calcPosition, calcPositionFromPoint, createCommonMenuItem, MenuItem, PositionOption } from '../helper';
 import { MenuPanel } from '../menuPanel/menuPanel';
 
 const css = `
@@ -51,7 +51,7 @@ export class ContextMenu extends HTMLElement {
         this.host.style.width = this.option.width;
         this.items = items;
 
-        this.menu = new MenuPanel('contextMenu');
+        this.menu = new MenuPanel('contextMenu', createHtml);
         this.root.appendChild(this.menu);
 
         this.menu.onClick = item => {
@@ -115,6 +115,18 @@ function closeMenuPanel() {
     if (currentContextMenu != null) {
         currentContextMenu.close();
     }
+}
+
+function createHtml(items: MenuItem[]): DocumentFragment {
+    const fragment = document.createDocumentFragment();
+
+    for (let i = 0; i < items.length; i++) {
+        const li = createCommonMenuItem(items[i], i);
+        li.classList.add('contextMenu');
+        fragment.append(li);
+    }
+
+    return fragment;
 }
 
 function initialize() {

@@ -1,4 +1,4 @@
-import { escapedRegex, isNullOrWhiteSpace, triggerEvent } from '../../utility/utility';
+import { escapedRegex, htmlToElement, isNullOrWhiteSpace, triggerEvent } from '../../utility/utility';
 import { MenuItem, PositionOption } from '../helper';
 import { MenuPanel } from '../menuPanel/menuPanel';
 
@@ -69,7 +69,7 @@ export class TreeSelect extends HTMLElement {
         }
         this.input.placeholder = this.option.placeholder!;
 
-        this.menu = new MenuPanel('treeSelect');
+        this.menu = new MenuPanel('treeSelect', createHtml);
         this.wrapper.appendChild(this.menu);
 
         this.menu.onClick = item => {
@@ -444,6 +444,48 @@ function closeMenuPanel() {
     if (currentMenu != null) {
         currentMenu.close();
     }
+}
+
+function setItemDom(item: MenuItem, depth = 0) {
+    const childExists = item.children && item.children.length > 0;
+
+    let li =
+        `<li class="treeSelect closed ${childExists ? '' : 'bottomLayer'}" data-depth="${depth}"}">` +
+        `${childExists ? '<span class="expander"></span>' : ''}` +
+        `<span class="checkbox"></span>` +
+        `<span class="label">${item.text}</span>`;
+
+    if (childExists) {
+        let ul = '<ul class="treeSelectList">';
+        item.children!.forEach(childItem => {
+            ul += setItemDom(childItem, depth + 1);
+        });
+        ul += '</ul>';
+        li += ul;
+    }
+    li += '</li>';
+    return li;
+}
+
+function createItem(item: MenuItem, index: number): HTMLElement {
+    if (item.type === 'divisor') {
+        return document.createElement('hr');
+    }
+
+    const li = htmlToElement(setItemDom(item)) as HTMLElement;
+    return li;
+}
+
+function createHtml(items: MenuItem[]): DocumentFragment {
+    const fragment = document.createDocumentFragment();
+    fragment.append(htmlToElement('<div class="buttons"><button type="button" class="">clear</button></div>'));
+
+    for (let i = 0; i < items.length; i++) {
+        const li = createItem(items[i], i);
+        fragment.append(li);
+    }
+
+    return fragment;
 }
 
 function initialize() {
