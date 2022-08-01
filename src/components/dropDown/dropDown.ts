@@ -81,7 +81,6 @@ export class DropDown extends HTMLElement {
             triggerEvent('change', this.input);
 
             this.option.onSelect(item);
-
             this.close();
         };
 
@@ -125,7 +124,7 @@ export class DropDown extends HTMLElement {
         };
     }
 
-    show(itemsChanged = false) {
+    private show(itemsChanged = false) {
         functions.closeMenuPanel();
 
         if (!this.menu.hasRendered || itemsChanged) {
@@ -140,7 +139,7 @@ export class DropDown extends HTMLElement {
         this.updatePosition();
     }
 
-    updatePosition() {
+    private updatePosition() {
         const { top, right, bottom, left } = functions.calcPosition(this.input, this.menu, this.position);
         this.menu.updatePosition({ top, right, bottom, left });
     }
@@ -156,7 +155,7 @@ export class DropDown extends HTMLElement {
         this.show(true);
     }
 
-    convert(items: any[]): MenuItem[] {
+    private convert(items: any[]): MenuItem[] {
         const menuItems = items.map(x => {
             if (x.type === 'divisor') {
                 return { text: '', value: '', type: 'divisor' };

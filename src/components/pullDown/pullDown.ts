@@ -56,13 +56,20 @@ export class PullDown extends HTMLElement {
         this.host = this.root.host as HTMLElement;
 
         this.option = Object.assign({}, defaultOption, userOption);
+
         this.items = this.convert(items);
 
-        this.menu = new MenuPanel('dropDown', createHtml);
+        this.menu = new MenuPanel('dropDown', functions.createHtml);
         this.root.appendChild(this.menu);
 
         this.menu.onClick = item => {
+            if (item.children != null) {
+                this.close(); // 最下層以外のクリックは無視する。
+                return;
+            }
+
             this.option.onSelect(item);
+            this.close();
         };
 
         this.menu.onClose = () => {
@@ -80,26 +87,30 @@ export class PullDown extends HTMLElement {
                 return;
             }
 
-            // todo fix as cast
-            this.show(e as MouseEvent);
+            this.positionTarget = this.option.setPosition!(e as MouseEvent);
+            if (this.positionTarget == null) {
+                return;
+            }
+
+            this.show();
         });
     }
 
-    private show(e: MouseEvent) {
-        closeMenuPanel();
+    private show(itemsChanged = false) {
+        functions.closeMenuPanel();
 
-        this.positionTarget = this.option.setPosition!(e);
-        if (this.positionTarget == null) {
-            return;
+        if (!this.menu.hasRendered || itemsChanged) {
+            this.menu.show(this.items);
+        } else {
+            this.menu.show();
         }
 
-        this.menu.show(this.items);
         currentContextMenu = this.self;
 
         this.updatePosition();
     }
 
-    updatePosition() {
+    private updatePosition() {
         const width = this.positionTarget!.offsetWidth;
         this.menu.style.width = width + 'px';
         const height = this.positionTarget!.offsetHeight;
@@ -111,22 +122,14 @@ export class PullDown extends HTMLElement {
 
     close() {
         this.menu.close();
-        this.positionTarget = null;
     }
 
     changeItems(items: any[]) {
         this.items = this.convert(items);
-        if (this.positionTarget == null) {
-            return;
-        }
-
-        this.menu.show(this.items);
-        currentContextMenu = this.self;
-
-        this.updatePosition();
+        this.show(true);
     }
 
-    convert(items: any[]): MenuItem[] {
+    private convert(items: any[]): MenuItem[] {
         const menuItems = items.map(x => {
             if (x.type === 'divisor') {
                 return { text: '', value: '', type: 'divisor' };
@@ -151,23 +154,30 @@ export class PullDown extends HTMLElement {
     }
 }
 
-function closeMenuPanel() {
-    if (currentContextMenu != null) {
-        currentContextMenu.close();
-    }
-}
+const functions = (() => {
+    function createHtml(items: MenuItem[]): DocumentFragment {
+        const fragment = document.createDocumentFragment();
 
-function createHtml(items: MenuItem[]): DocumentFragment {
-    const fragment = document.createDocumentFragment();
+        for (let i = 0; i < items.length; i++) {
+            const li = createCommonMenuItem(items[i], i);
+            li.classList.add('dropDown');
+            fragment.append(li);
+        }
 
-    for (let i = 0; i < items.length; i++) {
-        const li = createCommonMenuItem(items[i], i);
-        li.classList.add('dropDown');
-        fragment.append(li);
+        return fragment;
     }
 
-    return fragment;
-}
+    function closeMenuPanel() {
+        if (currentContextMenu != null) {
+            currentContextMenu.close();
+        }
+    }
+
+    return {
+        createHtml,
+        closeMenuPanel,
+    };
+})();
 
 function initialize() {
     customElements.define('rui-pulldown', PullDown);
@@ -176,7 +186,7 @@ function initialize() {
             return;
         }
 
-        closeMenuPanel();
+        functions.closeMenuPanel();
     });
 }
 
