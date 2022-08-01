@@ -30,6 +30,11 @@ const defaultOption = {
     onSelect: () => {},
 };
 
+type GetValuesOption = {
+    onlyValue: boolean;
+    onlyBottomLayer: boolean;
+};
+
 export class TreeSelect extends HTMLElement {
     private self: TreeSelect;
     private root: ShadowRoot;
@@ -206,50 +211,81 @@ export class TreeSelect extends HTMLElement {
         return menuItems as MenuItem[];
     }
 
-    getValue() {
-        return this.input.dataset.value!;
+    getValue(userOption: Partial<GetValuesOption> | null) {
+        const defaultOption: GetValuesOption = {
+            onlyValue: true,
+            onlyBottomLayer: true,
+        };
+
+        const option = { ...defaultOption, ...userOption };
+
+        function getCheckItemRecursively(
+            items: MenuItem[],
+            listItems: NodeListOf<HTMLElement>,
+            option: Partial<GetValuesOption>,
+            checkedItems: MenuItem[]
+        ) {
+            listItems.forEach((listItem, index) => {
+                const item = items[index];
+                if (option.onlyBottomLayer) {
+                    if (listItem.classList.contains('bottomLayer')) {
+                        if (!listItem.classList.contains('checked')) {
+                            checkedItems.push(item);
+                        }
+                    }
+                } else {
+                    if (!listItem.classList.contains('checked')) {
+                        checkedItems.push(item);
+                    }
+                }
+
+                if (item.children && item.children.length > 0) {
+                    getCheckItemRecursively(item.children, listItem.querySelectorAll<HTMLElement>(':scope > .treeSelect'), option, checkedItems);
+                }
+            });
+        }
+
+        const listItems = this.menu.ul.querySelectorAll<HTMLElement>(':scope > .treeSelect');
+        const checkedItems: MenuItem[] = [];
+
+        getCheckItemRecursively(this.items, listItems, option, checkedItems);
+
+        if (option.onlyValue) {
+            return checkedItems.map(x => x.value);
+        }
+
+        return checkedItems;
     }
 
-    setValue(value: string | number | null | undefined) {
-        const checkedItems: HTMLElement[] = [];
-        wrapper.querySelectorAll<HTMLElement>('.twTreeSelectItem').forEach(item => {
-            if (strIds.includes(item.dataset.id!)) {
-                listWorker.check(item);
-                listWorker.open(item);
-                checkedItems.push(item);
-            } else {
-                listWorker.uncheck(item);
-                listWorker.close(item);
-            }
-        });
+    setValue(values: string[]) {
+        function checkItemRecursively(items: MenuItem[], listItems: NodeListOf<HTMLElement>) {
+            items.forEach((item, index) => {
+                const listItem = listItems.item(index);
+                if (values.includes(item.value)) {
+                    listWorker.check(listItem);
+                    listWorker.open(listItem);
+                } else {
+                    listWorker.uncheck(listItem);
+                    listWorker.close(listItem);
+                }
 
+                if (item.children && item.children.length > 0) {
+                    checkItemRecursively(item.children, listItem.querySelectorAll<HTMLElement>(':scope > .treeSelect'));
+                }
+            });
+        }
+
+        const listItems = this.menu.ul.querySelectorAll<HTMLElement>(':scope > .treeSelect');
+        checkItemRecursively(this.items, listItems);
+
+        const checkedItems = this.menu.ul.querySelectorAll<HTMLElement>('.checked');
         checkedItems.forEach(item => {
+            // Only treat towards the upper layer
             listWorker.openParentListRecursively(item);
             listWorker.checkParentRecursively(item);
         });
 
-        this.resetPlaceholder(wrapper);
-
-        //
-        // const valueStr = value ? value.toString() : '';
-        const item = this.items.find(x => x.value === value);
-
-        if (item != null) {
-            this.input.value = item.text;
-            this.input.dataset.value = item.value;
-        } else if (this.option.useBlank) {
-            this.input.value = '';
-            this.input.dataset.value = '';
-        } else {
-            const item = this.items[0];
-            if (item) {
-                this.input.value = item.text;
-                this.input.dataset.value = item.value;
-            } else {
-                this.input.value = '';
-                this.input.dataset.value = '';
-            }
-        }
+        this.resetPlaceholder();
 
         // functionによる代入ではinputの変更をoninput/onchangeで補足できないため、能動的に発火する。
         triggerEvent('change', this.input);
