@@ -376,14 +376,11 @@ const listWorker = (() => {
         }
 
         const regExp = escapedRegex(input.value, 'i');
-        const liList = [...ul.children];
         for (const li of ul.children) {
             if (li.classList.contains('treeSelect')) {
                 openChildeListRecursively(li as HTMLElement, regExp);
             }
         }
-        // ul.querySelectorAll<HTMLElement>('.treeSelect').forEach(li => openChildeListRecursively(li, regExp));
-        // openChildeListRecursively(ul, regExp);
     }
 
     return {
