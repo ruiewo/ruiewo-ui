@@ -113,6 +113,7 @@ export class TreeSelect extends HTMLElement {
             }
         };
     }
+
     private setButtonCallback() {
         const buttons = this.menu.ul.querySelector<HTMLElement>('.buttons')!;
 
