@@ -1,27 +1,61 @@
 :host {
+    --color: #ccc;
+    --color-hover: #eee;
+    --background: #3c3c3c;
+    --background-hover: rgb(168, 54, 71);
+    --arrow-color: #ccc;
+    --arrow-color-hover: #eee;
+    --shadow-color: #fff5;
+
+    --height: 3rem;
+    --fontSize: 1.5rem;
+
+    // dropDown
+    --leftBorder: dimgray;
+
+    // treeSelect
+    --expanderWidth: var(--fontSize);
+    --expanderBorderWidth: calc(var(--expanderWidth) * 0.5);
+    --focus-theme-color: #db4d6f;
+}
+:host(.dark) {
+    --color: #ccc;
+    --color-hover: #eee;
+    --background: #3c3c3c;
+    --background-hover: #555;
+    --arrow-color: #ccc;
+    --arrow-color-hover: #eee;
+    --shadow-color: #fff5;
+
+    // dropDown
+    --leftBorder: dimgray;
+
+    // treeSelect
+    --focus-theme-color: #eee;
+}
+:host(.white) {
+    --color: #333;
+    --color-hover: #333;
+    --background: #f2f2f2;
+    --background-hover: #ddd;
+    --arrow-color: #333;
+    --arrow-color-hover: #111;
+    --shadow-color: #fff5;
+
+    // dropDown
+    --leftBorder: dimgray;
+
+    // treeSelect
+    --focus-theme-color: #333;
+}
+
+:host {
     // --color: #444;
     // --color-hover: #fff;
     // --background: linear-gradient(to bottom, #fff 0%, #e5e5e5 100px, #e5e5e5 100%);
     // --background-hover: linear-gradient(to bottom, #5d6d79, #2e3940);
     // --arrow-color: #808080;
     // --arrow-color-hover: #fff;
-
-    --color: var(--foreground-color);
-    --color-hover: #eee;
-    --background: var(--active-background-color);
-    --background-hover: var(--lightDark-theme-color);
-    --arrow-color: var(--foreground-color);
-    --arrow-color-hover: #eee;
-    --shadow-color: #fff5;
-
-    --height: 3rem;
-    --fontSize: 1.5rem;
-    --leftBorder: dimgray;
-
-    // treeSelect
-    --expanderWidth: var(--fontSize);
-    --expanderBorderWidth: calc(var(--expanderWidth) * 0.5);
-    --focus-theme-color: var(--theme-color);
 
     position: absolute;
     display: block;
@@ -43,22 +77,10 @@
 }
 
 ul {
-    // position: absolute;
-    // width: 12rem; // 200px
-    // padding: 0.3rem 0;
-    // margin: 0;
-    // background: var(--background);
-    // z-index: 100;
-    // box-shadow: 0px 0px 4px var(--shadow-color);
-    // display: none;
-
-    // position: absolute;
-    // top: 100%;
     display: none;
     list-style-type: none;
     text-align: left;
     background-color: var(--background);
-    // width: 100%;
     width: inherit;
     max-height: calc(var(--height) * 8);
     overflow-y: auto;
@@ -241,7 +263,8 @@ li.treeSelect {
             display: block;
             width: 18px;
             height: 18px;
-            border: 1px solid #d9d9d9;
+            // border: 1px solid #d9d9d9;
+            border: 1px solid var(--color);
             border-radius: 2px;
             /* top: -0.1em; */
             // 日本語は縦に長いため微調整入れた方がいい
