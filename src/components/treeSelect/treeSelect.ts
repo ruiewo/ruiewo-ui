@@ -1,6 +1,6 @@
 import { escapedRegex, htmlToElement, isNullOrWhiteSpace, triggerEvent } from '../../utility/utility';
 import { MenuItem, PositionOption, calcPositionForDropDown } from '../helper';
-import { MenuPanel } from '../menuPanel/menuPanel';
+import { ColorTheme, MenuPanel } from '../menuPanel/menuPanel';
 
 const css = `
 :host{--color: var(--foreground-color);--color-hover: #eee;--placeholder: dimgray;--arrow-color: var(--foreground-color);--background: transparent;--background-focus: var(--active-background-color);--height: 3rem;--fontSize: 1.5rem;--bottomBorder: 0.3rem solid var(--foreground-color);--bottomBorder-focus: var(--theme-color);width:12rem;display:inline-block}*{padding:0;margin:0;box-sizing:border-box;font-size:var(--fontSize)}div{display:inline-block;position:relative;width:inherit;height:var(--height);background-color:rgba(0,0,0,0);cursor:pointer}div::before{position:absolute;content:"▼";color:var(--arrow-color);right:1rem;line-height:var(--height)}div.active::before{transform:rotateX(180deg)}input{display:inline-block;width:100%;height:100%;line-height:var(--height);padding:.1rem .5rem;color:var(--color);text-align:left;background-color:var(--background);border:none;border-bottom:var(--bottomBorder);outline:none;-webkit-user-select:none;-moz-user-select:none;user-select:none;font-family:inherit}input:focus{background-color:var(--background-focus);border-bottom-color:var(--bottomBorder-focus)}input:-moz-read-only{cursor:pointer}input:read-only{cursor:pointer}input::-moz-placeholder{color:var(--placeholder)}input::placeholder{color:var(--placeholder)}
@@ -20,6 +20,7 @@ export type TreeSelectOption = {
     useBlank: boolean;
     useInput: boolean;
     onSelect: (treeSelect: TreeSelect) => void;
+    color?: ColorTheme;
 };
 const defaultOption = {
     valueKey: 'value',
@@ -70,7 +71,7 @@ export class TreeSelect extends HTMLElement {
         this.input.placeholder = this.option.placeholder!;
         this.input.dataset.placeholder = this.option.placeholder!;
 
-        this.menu = new MenuPanel('treeSelect', functions.createHtml);
+        this.menu = new MenuPanel('treeSelect', functions.createHtml, this.option.color);
         this.wrapper.appendChild(this.menu);
 
         this.wrapper.onmouseup = e => {

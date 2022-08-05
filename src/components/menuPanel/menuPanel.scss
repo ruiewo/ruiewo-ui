@@ -1,6 +1,6 @@
 :host {
-    --color: #ccc;
-    --color-hover: #eee;
+    --foreground: #ccc;
+    --foreground-hover: #eee;
     --background: #3c3c3c;
     --background-hover: rgb(168, 54, 71);
     --arrow-color: #ccc;
@@ -16,42 +16,12 @@
     // treeSelect
     --expanderWidth: var(--fontSize);
     --expanderBorderWidth: calc(var(--expanderWidth) * 0.5);
-    --focus-theme-color: #db4d6f;
-}
-:host(.dark) {
-    --color: #ccc;
-    --color-hover: #eee;
-    --background: #3c3c3c;
-    --background-hover: #555;
-    --arrow-color: #ccc;
-    --arrow-color-hover: #eee;
-    --shadow-color: #fff5;
-
-    // dropDown
-    --leftBorder: dimgray;
-
-    // treeSelect
-    --focus-theme-color: #eee;
-}
-:host(.white) {
-    --color: #333;
-    --color-hover: #333;
-    --background: #f2f2f2;
-    --background-hover: #ddd;
-    --arrow-color: #333;
-    --arrow-color-hover: #111;
-    --shadow-color: #fff5;
-
-    // dropDown
-    --leftBorder: dimgray;
-
-    // treeSelect
-    --focus-theme-color: #333;
+    --expander-color-hover: #db4d6f;
 }
 
 :host {
-    // --color: #444;
-    // --color-hover: #fff;
+    // --foreground: #444;
+    // --foreground-hover: #fff;
     // --background: linear-gradient(to bottom, #fff 0%, #e5e5e5 100px, #e5e5e5 100%);
     // --background-hover: linear-gradient(to bottom, #5d6d79, #2e3940);
     // --arrow-color: #808080;
@@ -106,7 +76,7 @@ li {
 
     &.hover,
     &:hover {
-        color: var(--color-hover);
+        color: var(--foreground-hover);
         background: var(--background-hover);
     }
 
@@ -126,7 +96,7 @@ li {
     width: 100%;
     height: var(--height);
     padding: 0.4rem 0.7rem;
-    color: var(--color);
+    color: var(--foreground);
     // border: 1px solid transparent;
     font-size: var(--fontSize);
     text-align: left;
@@ -228,11 +198,11 @@ li.treeSelect {
             display: block;
             content: '';
             border: var(--expanderBorderWidth) solid transparent;
-            border-top: var(--expanderBorderWidth) solid var(--foreground-color);
+            border-top: var(--expanderBorderWidth) solid var(--foreground);
             transition: border-color 150ms;
         }
         &:hover:before {
-            border-top: var(--expanderBorderWidth) solid var(--focus-theme-color);
+            border-top: var(--expanderBorderWidth) solid var(--expander-color-hover);
         }
     }
 
@@ -264,7 +234,7 @@ li.treeSelect {
             width: 18px;
             height: 18px;
             // border: 1px solid #d9d9d9;
-            border: 1px solid var(--color);
+            border: 1px solid var(--foreground);
             border-radius: 2px;
             /* top: -0.1em; */
             // 日本語は縦に長いため微調整入れた方がいい
@@ -331,7 +301,7 @@ hr {
     display: block;
     margin: 7px 5px;
     height: 1px;
-    background-color: var(--color);
+    background-color: var(--foreground);
 }
 
 li.subMenu {
