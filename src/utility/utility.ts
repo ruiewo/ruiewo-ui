@@ -1,5 +1,5 @@
 // // module形式 browser側で利用
-// export const sleep = msec => new Promise(resolve => setTimeout(resolve, msec));
+export const sleep = (msec:number) => new Promise(resolve => setTimeout(resolve, msec));
 
 export const range = function* (from: number, to: number) {
     while (from <= to) yield from++;
