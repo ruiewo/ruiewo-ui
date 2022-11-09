@@ -19,6 +19,7 @@ export type DropDownOption = {
     placeholder: string;
     useBlank: boolean;
     useInput: boolean;
+    useTitle: boolean;
     onSelect: (item: MenuItem) => void;
 };
 const defaultOption = {
@@ -27,6 +28,7 @@ const defaultOption = {
     placeholder: '選択/入力して下さい',
     useBlank: false,
     useInput: false,
+    useTitle: false,
     onSelect: () => {},
 };
 
@@ -65,7 +67,7 @@ export class DropDown extends HTMLElement {
 
         this.items = this.convert(items);
 
-        this.menu = new MenuPanel('dropDown', functions.createHtml);
+        this.menu = new MenuPanel('dropDown', items => functions.createHtml(items, this.option.useTitle));
         this.wrapper.appendChild(this.menu);
 
         this.menu.onClick = item => {
@@ -209,12 +211,16 @@ export class DropDown extends HTMLElement {
 }
 
 const functions = (() => {
-    function createHtml(items: MenuItem[]): DocumentFragment {
+    function createHtml(items: MenuItem[], useTitle: boolean): DocumentFragment {
         const fragment = document.createDocumentFragment();
 
         for (let i = 0; i < items.length; i++) {
             const li = createCommonMenuItem(items[i], i);
             li.classList.add('dropDown');
+            if (useTitle) {
+                li.setAttribute('title', items[i].text);
+            }
+
             fragment.append(li);
         }
 
